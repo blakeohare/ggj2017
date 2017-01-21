@@ -1,0 +1,138 @@
+
+POLL (all these response and request fields are present on all requests)
+
+request: {
+	"action": "POLL",
+	"token": "USER TOKEN"
+	"event_id": "last known event ID"
+}
+
+response: {
+	"err": "OK" | "GAME_RESET"
+	"poll": {
+		"state": { 
+			// this is seldomly populated and is like a keyframe that occurs every 20 seconds
+			"user_data": "{USER_ID}:{NAME}:{X}:{Y}|...",
+			"wave_data": "{WAVE_ID}:{USER_ID}:{X1}:{Y1}:{X2}:{Y2}:{X3}:{Y3}|..."
+		},
+		"event_id_min": LOWEST_EVENT_ID // only present if state is not present
+		"event_id_max": HIGHEST_EVENT_ID
+		"events": { // only present if state is not present
+			"e{EVENT_ID}": { "type": type, "data": data }
+		},
+		"scores": {
+			{
+			  "user_ID": "score"
+			}
+		}
+	}
+}
+
+EVENTS:
+- MOVE:{USER_ID}:{SEGMENT_COUNT}:{X1}:{Y1}:{X2}:{Y2}:...
+- JOIN:{USER_ID}:{NAME}:{X}:{Y}
+- PART:{USER_ID}
+- WAVE_INIT:{USER_ID}:{WAVE_ID}:{X1}:{Y1}:{X2}:{Y2}:{X3}:{Y3}
+- WAVE_RECV:{BY_USER_ID}:{ORIGIN_USER_ID}:{WAVE_ID}
+- WAVE_GIVE_UP:{WAVE_ID}
+
+=========================================================
+
+All move and wave commands consume a msg_id in the request parameter. 
+Provide the same msg_id for retries of old msg's. 
+Always provide a larger msg_id for each new message
+
+incoming requests that have lower msg_id's than the largest one for the user are ignored as delayed network requests
+move commands that dont' get ack'd by the server should retry with the same msg_id followed by new movement vectors with another msg_id
+if the original is never ack'd that's okay, there are no barriers and the character will just go directly to that point.
+
+-------------------------------------------------------
+
+JOIN
+request: {
+	"action": "JOIN",
+	"name": "USERNAME",
+}
+
+response: {
+	"err": "OK" | "NAME_IN_USE" | "INVALID_NAME" | "BAD_WORD" | "SERVER_FULL"
+	"user_token": "PASSWORD TOKEN FOR FUTURE REQUESTS",
+	"user_id": "YOUR USER ID",
+	"poll": ...
+}
+
+-------------------------------------------------------
+
+PART: 
+request {
+  "action": "PART"
+  "user_token": "YOUR USER TOKEN",
+}
+
+response {
+  "err": "OK",
+}
+
+-------------------------------------------------------
+
+MOVE:
+request: {
+	"user_token": "TOKEN",
+	"event_id": ...
+	"target": "123,45.6|123,57.8" <-- list of absolute points. points are pipe delimited. coords are comma delimited
+	"msg_id": ...
+}
+
+response: {
+  "err": "OK" | GAME_RESET | INVALID
+	"poll": ...
+}
+
+-------------------------------------------------------
+
+WAVE_INIT
+request: {
+	"user_token": "TOKEN"
+	"event_id": ...
+	"target": "X1,Y1,X2,Y2,X3,Y3"
+	"msg_id": ...
+}
+
+response: {
+	"err": OK | GAME_RESET | INVALID
+	"user_target": USER_ID
+	"transaction_id": WAVE_ID
+	"poll": ...
+}
+
+----------------------------------
+
+WAVE_RECV
+request: {
+	"user_token": "TOKEN"
+	"wave_id": WAVE_ID
+	"event_id": ...
+	"msg_id": ...
+}
+
+response: {
+	"err": OK | GAME_RESET | INVALID
+	"status": GONE | ACCEPTED
+	"poll": ...
+}
+
+---------------------------------------
+
+WAVE_GIVE_UP
+
+request: {
+	"user_token": "TOKEN"
+	"wave_id": WAVE_ID
+	"event_id": ...
+	"msg_id": ...
+}
+
+response: {
+	"err": OK | GAME_RESET
+	"poll": ...
+}

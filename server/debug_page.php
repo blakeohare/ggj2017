@@ -2,11 +2,9 @@
 	// TODO: guard this page off with an IP check
 	
 	$api_result = null;
-	if (isset($POST['submit'])) {
+	if (isset($_POST['submit'])) {
 		$dbg_request = new HttpRequest();
-		$json = trim($_POST['dbg_request']);
-		$dbg_request->set_json($json);
-		
+		$dbg_request->set_json_string(trim($_POST['dbg_request']));
 		$api_result = route_action($dbg_request);
 	}
 	
@@ -36,7 +34,7 @@
 <div><pre>
 <?
 	if ($api_result !== null) {	
-		echo json_encode($result, JSON_PRETTY_PRINT);
+		echo json_encode($api_result, JSON_PRETTY_PRINT);
 	}
 ?>
 </pre></div>

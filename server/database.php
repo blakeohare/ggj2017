@@ -20,6 +20,11 @@
 		
 		function raw_query($sql, $show_error = true) {
 			$output = $this->db->query($sql);
+			if ($this->db->errno !== 0) {
+				echo "ERROR:\n";
+				echo $this->db->error . "\n";
+				echo $sql . "\n\n";
+			}
 			return $output;
 		}
 		
@@ -83,7 +88,7 @@
 			
 			if ($select_columns === null) $select_columns = array($column);
 			else array_push($select_columns, $column);
-			$columns = remove_duplicates($columns);
+			$select_columns = remove_duplicates($select_columns);
 			
 			$query = array("SELECT ");
 			$first = true;
@@ -102,7 +107,7 @@
 			
 			$output = array();
 			$result = $this->raw_query(implode('', $query));
-			for ($i = $result->num_rows - 1; $i >= 0; ++$i) {
+			for ($i = $result->num_rows - 1; $i >= 0; --$i) {
 				$row = $result->fetch_assoc();
 				$output[$row[$column]] = $row;
 			}
@@ -110,7 +115,7 @@
 		}
 		
 		function select_by_id($table, $column, $value, $select_columns = null) {
-			$result = $this->select_by_ids($table, $column, array($values), $select_columns_);
+			$result = $this->select_by_ids($table, $column, array($value), $select_columns);
 			if (count($result) == 0) return null;
 			return $result[$value];
 		}
