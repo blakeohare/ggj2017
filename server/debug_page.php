@@ -31,6 +31,10 @@
 ?></textarea>
 </div>
 
+<div>
+<input type="submit" name="submit" value="Send"/>
+</div>
+
 <div><pre>
 <?
 	if ($api_result !== null) {	
@@ -42,10 +46,6 @@
 	}
 ?>
 </pre></div>
-
-<div>
-<input type="submit" name="submit" value="Send"/>
-</div>
 
 </form>
 

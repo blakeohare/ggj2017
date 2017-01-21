@@ -72,7 +72,7 @@
 				else array_push($query, ', ');
 				array_push($query, "`" . $this->sanitize($key) . "` = '" . $this->sanitize($value) . "'");
 			}
-			array_push($query, "WHERE " . $where);
+			array_push($query, " WHERE " . $where);
 			if ($limit !== null) {
 				array_push($query, " LIMIT " . $limit);
 			}

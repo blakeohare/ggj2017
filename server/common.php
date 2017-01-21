@@ -18,25 +18,25 @@
 			}
 		}
 	*/
-	function get_poll_data($game_id = null) {
-		if ($game_id !== null && is_old_game($game_id)) {
-			return array('old' => true);
-		}
+	function get_poll_data($request) {
 		
 		$output = array();
 		$now = time();
 		$event_id = intval($request->json['event_id']);
+		$game_id = intval($request->json['game_id']);
 		
 		$events_db = db()->select("
 			SELECT
 				`event_id`,
 				`game_id`,
 				`type`,
-				`data`
+				`data`,
+				`game_id`
 			FROM `events`
 			WHERE `event_id` >= $event_id
 			ORDER BY `event_id`");
 		$events = $events_db->as_table();
+		
 		if (count($events) == 0 || $events[0]['event_id'] != $event_id) {
 			// just do a full sync since your data is super old
 			$latest_state = generate_latest_state($game_id);
@@ -66,6 +66,9 @@
 				'type' => $event['type'],
 				'data' => $event['data'],
 			);
+			if ($event['game_id'] > $game_id) {
+				return array('old' => true);
+			}
 		}
 		return array(
 			'event_id_min' => $event_id_min,
@@ -211,7 +214,7 @@
 		}
 		
 		return array(
-			'event_id' => $last_full_state_event_id,
+			'includes_event_id' => $last_full_state_event_id,
 			'user_data' => $user_data,
 			'wave_data' => $wave_data);
 	}
@@ -246,6 +249,25 @@
 		return $output;
 	}
 	
+	// failed attempts are assumed to be outdated, but just return null
+	function authenticate_request($request) {
+		$user_id = intval($request->json['user_id']);
+		$token = trim($request->json['token']);
+		$msg_id = intval($request->json['msg_id']);
+		$game_id = intval($request->json['game_id']);
+		
+		$user_info = db()->select_by_id('users', 'user_id', $user_id, array('user_id', 'token', 'msg_received', 'game_id'));
+		
+		if ($user_info === null) return array('err' => 'MISSING');
+		if ($user_info['token'] != $token) return array('err' => 'MISSING', 'info' => 'BAD_AUTH');
+		if (intval($user_info['msg_received']) >= $msg_id) return array('err' => 'LATENCY');
+		if (intval($user_info['game_id']) != $game_id) return array('err' => 'GAME_RESET');
+		
+		$user_info['err'] = 'OK';
+		
+		return $user_info;
+	}
+	
 	function get_user($user_id, $token, $game_id, $columns = null) {
 		if ($columns === null) $columns = array();
 		array_push($columns, 'token');
@@ -257,10 +279,5 @@
 			$user['token'] !== $token ||
 			intval($user['game_id']) !== $game_id) return null;
 		return $user;
-	}
-	
-	function is_old_game($game_id) {
-		$latest_game_id = get_current_game_id();
-		return ($game_id != $latest_game_id);
 	}
 ?>

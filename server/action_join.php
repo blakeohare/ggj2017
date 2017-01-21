@@ -41,7 +41,7 @@
 					'user_id' => $existing_user['user_id'],
 					'name' => $existing_user['name'],
 					'game_id' => $existing_user['game_id'],
-					'poll' => get_poll_data());
+					'poll' => get_poll_data($request));
 			}
 			return array("err" => "NAME_IN_USE");
 		}
@@ -71,13 +71,15 @@
 				'join_token' => $join_token,
 			));
 		
+		db()->insert('events', array('time' => time(), 'game_id' => $game_id, 'type' => 'JOIN', 'data' => $user_id . ':' . $name . ':' . $x . ':' . $y));
+		
 		return array(
 			'err' => 'OK',
 			'token' => $token,
 			'user_id' => $user_id,
 			'name' => $name,
 			'game_id' => $game_id,
-			'poll' => get_poll_data(),
+			'poll' => get_poll_data($request),
 		);
 		
 	}

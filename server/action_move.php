@@ -3,6 +3,7 @@
 		
 		REQUEST:
 		{
+			"action": "MOVE",
 			"user_id": user ID
 			"token": user token
 			"pts": "123,45|123,67" <-- list of absolute points. points are pipe delimited. coords are comma delimited
@@ -18,14 +19,20 @@
 
 	*/
 	function action_move($request) {
-		if (is_old_game($request))
-			return array('err' => 'GAME_RESET');
+		$user_info = authenticate_request($request);
+		switch ($user_info['err']) {
+			case 'OK': break;
+			case 'MISSING': return array('err' => 'GAME_RESET', 'info' => $user_info);
+			case 'LATENCY': return array('err' => 'OLD');
+			case 'GAME_RESET': return array('err' => 'GAME_REST');
+			default: return array('err' => "NOT_IMPLEMENTED", 'info' => $user_info['err']);
+		}
+		$user_id = $user_info['user_id'];
 		
-		$msg_id = intval($request->json['msg_received']);
 		$pts_raw = explode('|', trim($request->json['pts']));
 		$pts = array();
 		$last_pt = null;
-		$data = array($user['user_id']);
+		$data = array($user_id);
 		foreach ($pts_raw as $pt_raw) {
 			$pt = array();
 			$parts = explode(',', $pt_raw);
@@ -40,22 +47,13 @@
 			array_push($data, $x);
 			array_push($data, $y);
 		}
-		$user = get_user(
-			intval($request->json['user_id']),
-			trim($request->json['token']),
-			intval($request->json['game_id']),
-			array('msg_received'));
 		
-		if ($user === null) return array('err' => 'GAME_RESET');
-		if (intval($msg_id) <= intval($user['msg_received'])) {
-			return array('err' => 'OLD');
-		}
-		
-		$affected_rows = db()->update('user', array(
+		$affected_rows = db()->update('users', array(
 				'location' => $last_pt[0] . '|' . $last_pt[1],
-				'msg_id' => 
+				'msg_received' => intval($request->json['msg_id']),
 			),
-			"`user_id` = " . $user['user_id'], 1);
+			"`user_id` = " . $user_id,
+			1);
 		if ($affected_rows == 0) {
 			return array('err' => 'GAME_RESET', 'info' => 'update did not affect user');
 		}
@@ -64,9 +62,7 @@
 			'type' => 'MOVE',
 			'data' => implode(':', $data)));
 		
-		maybe_do_state_update($event_id);
-		
-		$poll = get_poll_data($game_id);
+		$poll = get_poll_data($request);
 		
 		if ($poll['old']) return array('err' => 'OLD');
 		

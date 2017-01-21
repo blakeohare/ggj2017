@@ -33,20 +33,11 @@
 
 	*/
 	function action_poll($request) {
-		if (is_old_game($request))
-			return array('err' => 'GAME_RESET');
-		
-		$user = get_user(
-			intval($request->json['user_id']),
-			trim($request->json['token']),
-			intval($request->json['game_id']));
-		
-		if ($user === null) {
-			return array('err' => 'GAME_RESET');
-		}
-		
-		$output = array('err' => 'OK');
-		$output = add_poll_response($request, $output);
-		return $output;
+		$poll = get_poll_data($request);
+		if ($poll['old']) return array('err' => 'GAME_RESET');
+		return array(
+			'err' => 'OK',
+			'poll' => $poll,
+		);
 	}
 ?>
