@@ -1,0 +1,33 @@
+<build>
+	<projectname>GGJ2017</projectname>
+	<source>source/</source>
+	<output>output/%TARGET_NAME%</output>
+	<!--imagesheets>
+		<sheet id="everything">
+			<prefix>images/</prefix>
+		</sheet>
+	</imagesheets-->
+	
+	<guidseed>com.blakeohare.ggj2017,v1,%TARGET_NAME%</guidseed>
+	
+	<target name="android">
+		<platform>game-csharp-android</platform>
+	</target>
+	
+	<target name="js_local">
+		<platform>game-javascript</platform>
+	</target>
+	
+	<target name="js_remote">
+		<platform>game-javascript</platform>
+		<jsfileprefix>/games/spacezelda/</jsfileprefix>
+	</target>
+	
+	<target name="csharp">
+		<platform>game-csharp-opentk</platform>
+	</target>
+	
+	<target name="python">
+		<platform>game-python-pygame</platform>
+	</target>
+</build>
