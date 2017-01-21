@@ -1,0 +1,9 @@
+class NetworkPump {
+	
+	field sending = [];
+	field received = [];
+	
+	constructor() {
+	
+	}
+}

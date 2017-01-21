@@ -1,0 +1,7 @@
+class UIImage : UIElement {
+	field img;
+	
+	constructor(x, y, img) : base(x, y, img.width, img.height) {
+		this.img = img;
+	}
+}

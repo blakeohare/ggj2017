@@ -2,11 +2,11 @@
 	<projectname>GGJ2017</projectname>
 	<source>source/</source>
 	<output>output/%TARGET_NAME%</output>
-	<!--imagesheets>
+	<imagesheets>
 		<sheet id="everything">
 			<prefix>images/</prefix>
 		</sheet>
-	</imagesheets-->
+	</imagesheets>
 	
 	<guidseed>com.blakeohare.ggj2017,v1,%TARGET_NAME%</guidseed>
 	

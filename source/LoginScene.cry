@@ -1,0 +1,6 @@
+class LoginScene : AbstractScene {
+	
+	constructor() : base() {
+		this.addElement(new UIRectangle(10, 10, 100, 100, 0, 128, 255, 255));
+	}
+}

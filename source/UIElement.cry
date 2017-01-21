@@ -1,0 +1,20 @@
+class UIElement {
+	field x;
+	field y;
+	field width;
+	field height;
+	field lastBounds = null;
+	field isHitTestable = false;
+	
+	constructor(x, y, width, height) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+	}
+	
+	function getBounds() {
+		this.lastBounds = [this.x, this.y, this.x + this.width, this.y + this.height];
+		return this.lastBounds;
+	}
+}

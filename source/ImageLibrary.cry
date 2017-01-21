@@ -1,0 +1,39 @@
+import Math;
+import ImageResources;
+import Graphics2D;
+
+static class ImageLibrary {
+	static field images = {};
+	static field imagesAtScale = {};
+	static field sheet = null;
+	
+	static function get(path) {
+		img = ImageLibrary.get(path);
+		if (img == null) {
+			imgRes = ImageLibrary.sheet.getImage('images/' + path);
+			img = GraphicsTexture.load(imgRes);
+			ImageLibrary.images[path] = img;
+		}
+		return img;
+	}
+	
+	static function getAtScale(path, ratio) {
+		key = Math.floor(ratio * 1000);
+		lookup = ImageLibrary.imagesAtScale.get(key);
+		if (lookup == null) {
+			lookup = {};
+			ImageLibrary.imagesAtScale[key] = lookup;
+		}
+		
+		img = lookup.get(path);
+		if (img == null) {
+			normal = ImageLibrary.get(path);
+			newWidth = Math.max(1, Math.floor(normal.width * ratio));
+			newHeight = Math.max(1, Math.floor(normal.height * ratio));
+			img = normal.scale(newWidth, newHeight);
+			lookup[path] = img;
+		}
+		return img;
+	}
+	
+}

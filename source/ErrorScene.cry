@@ -1,0 +1,17 @@
+
+class ErrorScene : AbstractScene {
+	
+	field bgScene;
+	
+	constructor(bg) : base() {
+		this.bgScene = bg;
+	}
+	
+	function update(input) {
+		
+	}
+	
+	function render(rc) {
+		
+	}
+}

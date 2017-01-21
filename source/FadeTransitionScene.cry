@@ -1,0 +1,35 @@
+import Math;
+import Graphics2D;
+
+class FadeTransitionScene : AbstractScene {
+	field duration = FPS;
+	field halfDuration = FPS / 2;
+	field counter = 0;
+	field prevScene;
+	field nextScene;
+	
+	constructor(prevScene, nextScene) : base() {
+		this.prevScene = prevScene;
+		this.nextScene = nextScene;
+	}
+	
+	function update(input) {
+		if (this.counter++ >= this.duration) {
+			this.switchScene(this.nextScene);
+		}
+	}
+	
+	function render(rc) {
+		if (this.counter < this.halfDuration) {
+			this.prevScene.renderUI(rc);
+		} else {
+			this.nextScene.renderUI(rc);
+		}
+		
+		distFromCenter = Math.abs(this.counter - this.halfDuration);
+		darknessRatio = 1.0 - 1.0 * distFromCenter / this.halfDuration;
+		
+		alpha = Math.min(255, Math.max(0, Math.floor(darknessRatio * 255)));
+		Draw.rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0, alpha);
+	}
+}

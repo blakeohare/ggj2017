@@ -1,0 +1,45 @@
+
+class AbstractScene {
+	field _next;
+	field _ui = [];
+	
+	constructor() {
+	}
+	
+	function switchScene(newScene) {
+		this._next = newScene;
+	}
+	
+	function addElement(element) {
+		this._ui.add(element);
+		return this;
+	}
+	
+	function hitTest(x, y) {
+		for (i = this._ui.length - 1; i >= 0; --i) {
+			bounds = this._ui.lastBounds ?? this._ui.getBounds();
+			if (x >= bounds[0] && x < bounds[2] && y >= bounds[1] && y < bounds[3]) {
+				element = this._ui[i];
+				if (element.isHitTestable) return element;
+				return null; // hiding
+			}
+		}
+		return null;
+	}
+	
+	function update(mouse_touches) {
+		// override if there's anything to do
+	}
+	
+	function render(rc) {
+		// override if you want (e.g. the playscene actual play surface.
+	}
+	
+	function renderUI(rc) {
+		this.render(rc);
+		
+		for (element : this._ui) {
+			element.render(rc);
+		}
+	}
+}

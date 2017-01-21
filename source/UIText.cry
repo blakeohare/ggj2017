@@ -1,0 +1,9 @@
+class UIText : UIElement {
+	constructor(x, y, width, height, images) : base(x, y, width, height) {
+		
+	}
+	
+	static function create(x, y, text) {
+		
+	}
+}

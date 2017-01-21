@@ -1,0 +1,20 @@
+import Graphics2D;
+
+class UIRectangle : UIElement {
+	
+	field red;
+	field green;
+	field blue;
+	field alpha;
+	
+	constructor(x, y, width, height, r, g, b, a) : base(x, y, width, height) {
+		this.red = r;
+		this.green = g;
+		this.blue = b;
+		this.alpha = a;
+	}
+	
+	function render(rc) {
+		Draw.rectangle(this.x, this.y, this.width, this.height, this.red, this.green, this.blue, this.alpha);
+	}
+}
