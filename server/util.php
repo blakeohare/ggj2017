@@ -31,4 +31,16 @@
 		}
 		return implode('', $output);
 	}
+	
+	function random_float() {
+		return
+			rand(0, 999) / 1000.0 +
+			rand(0, 999) / 1000000.0 +
+			rand(0, 999) / 1000000000.0;
+	}
+	
+	function round_float($value) {
+		return intval($value * 1000) / 1000.0;
+	}
+	
 ?>

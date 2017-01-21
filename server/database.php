@@ -82,6 +82,15 @@
 			return $this->db->affected_rows;
 		}
 		
+		function delete($table, $where, $limit = null) {
+			$query = "DELETE FROM `" . $this->sanitize($table) . "` WHERE $where";
+			if ($limit !== null) {
+				$query .= ' LIMIT ' . $limit;
+			}
+			$this->raw_query($query);
+			return $this->db->affected_rows;
+		}
+		
 		function select_by_ids($table, $column, $values, $select_columns = null) {
 			$values = remove_duplicates($values);
 			if (count($values) == 0) return array();

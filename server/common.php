@@ -26,14 +26,16 @@
 		return $output;
 	}
 	
-	function random_float() {
-		return
-			rand(0, 999) / 1000.0 +
-			rand(0, 999) / 1000000.0 +
-			rand(0, 999) / 1000000000.0;
-	}
-	
-	function round_float($value) {
-		return intval($value * 1000) / 1000.0;
+	function get_user($user_id, $token, $game_id, $columns = null) {
+		if ($columns === null) $columns = array();
+		array_push($columns, 'token');
+		array_push($columns, 'game_id');
+		$user = db()->select_by_id('users', 'user_id', $user_id, $columns);
+		$game_id = intval($game_id);
+		
+		if ($user === null ||
+			$user['token'] !== $token ||
+			intval($user['game_id']) !== $game_id) return null;
+		return $user;
 	}
 ?>
