@@ -1,4 +1,12 @@
 
+EVENTS:
+- MOVE:{USER_ID}:{X1}:{Y1}:{X2}:{Y2}:...
+- JOIN:{USER_ID}:{NAME}:{X}:{Y}
+- PART:{USER_ID}
+- WAVE_INIT:{USER_ID}:{WAVE_ID}:{X1}:{Y1}:{X2}:{Y2}:{X3}:{Y3}
+- WAVE_RECV:{BY_USER_ID}:{ORIGIN_USER_ID}:{WAVE_ID}
+- WAVE_GIVE_UP:{WAVE_ID}
+
 POLL (all these response and request fields are present on all requests)
 
 request: {
@@ -27,14 +35,6 @@ response: {
 		}
 	}
 }
-
-EVENTS:
-- MOVE:{USER_ID}:{SEGMENT_COUNT}:{X1}:{Y1}:{X2}:{Y2}:...
-- JOIN:{USER_ID}:{NAME}:{X}:{Y}
-- PART:{USER_ID}
-- WAVE_INIT:{USER_ID}:{WAVE_ID}:{X1}:{Y1}:{X2}:{Y2}:{X3}:{Y3}
-- WAVE_RECV:{BY_USER_ID}:{ORIGIN_USER_ID}:{WAVE_ID}
-- WAVE_GIVE_UP:{WAVE_ID}
 
 =========================================================
 
@@ -71,21 +71,6 @@ request {
 
 response {
   "err": "OK",
-}
-
--------------------------------------------------------
-
-MOVE:
-request: {
-	"user_token": "TOKEN",
-	"event_id": ...
-	"target": "123,45.6|123,57.8" <-- list of absolute points. points are pipe delimited. coords are comma delimited
-	"msg_id": ...
-}
-
-response: {
-  "err": "OK" | GAME_RESET | INVALID
-	"poll": ...
 }
 
 -------------------------------------------------------

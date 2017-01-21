@@ -38,4 +38,12 @@
 			intval($user['game_id']) !== $game_id) return null;
 		return $user;
 	}
+	
+	function is_old_game($request) {
+		$games = db()->select("SELECT `game_id` FROM `games` ORDER BY `game_id` DESC LIMIT 1");
+		$game = $games->next();
+		$latest_game_id = intval($game['game_id']);
+		$user_game_id = intval($request->json['game_id']);
+		return ($game_id != $latest_game_id);
+	}
 ?>
