@@ -8,7 +8,7 @@ static class ImageLibrary {
 	static field sheet = null;
 	
 	static function get(path) {
-		img = ImageLibrary.get(path);
+		img = ImageLibrary.images.get(path);
 		if (img == null) {
 			imgRes = ImageLibrary.sheet.getImage('images/' + path);
 			img = GraphicsTexture.load(imgRes);

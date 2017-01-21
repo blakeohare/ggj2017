@@ -14,7 +14,6 @@ class LoadingScene : AbstractScene {
 		if (this.loader == null) {
 			this.loader = ImageSheet.loadFromResourcesAsync('everything');
 		}
-		
 		if (this.loader.isDone()) {
 			ImageLibrary.sheet = this.loader;
 			this.progress = 1.0;

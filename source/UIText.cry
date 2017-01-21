@@ -1,9 +1,131 @@
+enum FontSize {
+	XS,
+	S,
+	M,
+	L,
+	XL,
+}
+
 class UIText : UIElement {
-	constructor(x, y, width, height, images) : base(x, y, width, height) {
-		
+	
+	static field fonts_by_key = {};
+	static field char_mapping = null;
+	
+	field images;
+	field spaceWidth;
+	
+	constructor(x, y, width, height, images, spaceWidth) : base(x, y, width, height) {
+		this.images = images;
+		this.spaceWidth = spaceWidth;
 	}
 	
-	static function create(x, y, text) {
-		
+	function render(rc) {
+		x = this.x;
+		y = this.y;
+		for (img : this.images) {
+			if (img == null) {
+				x += this.spaceWidth;
+			} else {
+				img.draw(x, y);
+				x += img.width;
+			}
+		}
 	}
+	
+	static function create(x, y, text, color, size) {
+		key = color + ':' + size;
+		font = UIText.fonts_by_key.get(key);
+		if (font == null) {
+			font = {};
+			mapping = UIText.get_char_mapping();
+			ratio = {
+				FontSize.XS: 1.0,
+				FontSize.S: 2.0,
+				FontSize.M: 3.0,
+				FontSize.L: 5.0,
+				FontSize.XL: 8.0,
+			}[size];
+			for (c : mapping.keys()) {
+				filename = mapping[c];
+				img = ImageLibrary.getAtScale('text/' + color + '/' + filename + '.png', ratio);
+				font[c] = img;
+			}
+			UIText.fonts_by_key[key] = font;
+		}
+		
+		images = [];
+		for (c : text) {
+			if (c == ' ') {
+				images.add(null);
+			} else {
+				img = font.get(c);
+				if (img == null) {
+					img = font['?'];
+				}
+				images.add(img);
+			}
+		}
+		
+		spaceWidth = font['v'].width;
+		width = 0;
+		height = font['v'].height;
+		for (img : images) {
+			if (img == null) {
+				width += spaceWidth;
+			} else {
+				width += img.width;
+			}
+		}
+		
+		return new UIText(x, y, width, height, images, spaceWidth);
+	}
+	
+	static function get_char_mapping() {
+		if (UIText.char_mapping == null) {
+			mapping = {
+				'&': 'am',
+				"'": 'ap',
+				'*': 'as',
+				'@': 'at',
+				'\\': 'bs',
+				'`': 'bt',
+				'>': 'ca',
+				'}': 'cc',
+				',': 'cm',
+				':': 'co',
+				')': 'cp',
+				'^': 'cr',
+				']': 'cs',
+				'"': 'dq',
+				'=': 'eq',
+				'!': 'ex',
+				'#': 'ha',
+				'-': 'hy',
+				'$': 'mo',
+				'<': 'oa',
+				'{': 'oc',
+				'(': 'op',
+				'[': 'os',
+				'%': 'pe',
+				'|': 'pi',
+				'.': 'pr',
+				'+': 'pu',
+				'?': 'qu',
+				';': 'sc',
+				'/': 'sl',
+				'~': 'ti',
+				'_': 'un',
+				};
+			for (char : 'abcdefghijklmnopqrstuvwxyz') {
+				mapping[char] = 'low_' + char;
+				mapping[char.upper()] = 'up_' + char;
+			}
+			for (i = 0; i < 10; ++i) {
+				mapping[i + ''] = 'num_' + i;
+			}
+			UIText.char_mapping = mapping;
+		}
+		return UIText.char_mapping;
+	}
+	
 }
