@@ -1,6 +1,5 @@
 <?php
 	/*
-		
 		REQUEST:
 		{
 			"action": "JOIN",
@@ -21,7 +20,7 @@
 	*/
 	function action_join($request) {
 		$name = name_canonicalize(trim($request->json['name']));
-		$join_token = trim($request->join['join_token'] . '');
+		$join_token = trim($request->json['join_token'] . '');
 		
 		if (strlen($name) < 3) {
 			return array('err' => "INVALID_NAME");
@@ -35,14 +34,14 @@
 		if ($existing_user !== null) {
 			if ($join_token == $existing_user['join_token']) {
 				// this is actually the same user
-				$output = array(
+				return array(
 					'err' => "OK",
 					'is_dup' => 1,
 					'token' => $existing_user['token'],
 					'user_id' => $existing_user['user_id'],
 					'name' => $existing_user['name'],
-					'game_id' => $existing_user['game_id']);
-				return add_latest_poll($request, $output);
+					'game_id' => $existing_user['game_id'],
+					'poll' => get_poll_data());
 			}
 			return array("err" => "NAME_IN_USE");
 		}
@@ -60,24 +59,26 @@
 		$game = $active_game->next();
 		$game_id = $game['game_id'];
 		
-		$user_id = db()->insert('users', array(
-			'name' => $name,
-			'token' => $token,
-			'location' => $x . '|' . $y,
-			'score' => 0,
-			'msg_received' => 0,
-			'game_id' => $game_id,
-			'join_token' => $join_token,
+		$user_id = db()->insert(
+			'users', 
+			array(
+				'name' => $name,
+				'token' => $token,
+				'location' => $x . '|' . $y,
+				'score' => 0,
+				'msg_received' => 0,
+				'game_id' => $game_id,
+				'join_token' => $join_token,
 			));
 		
-		$output = array(
+		return array(
 			'err' => 'OK',
 			'token' => $token,
 			'user_id' => $user_id,
 			'name' => $name,
 			'game_id' => $game_id,
-			);
+			'poll' => get_poll_data(),
+		);
 		
-		return add_latest_poll($request, $output);
 	}
 ?>

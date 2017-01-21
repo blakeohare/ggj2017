@@ -140,6 +140,10 @@
 			$this->index = 0;
 		}
 		
+		function has_more() {
+			return $this->index < $this->size;
+		}
+		
 		function has_next() {
 			return $this->index < $this->size;
 		}

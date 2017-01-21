@@ -51,14 +51,27 @@
 			return array('err' => 'OLD');
 		}
 		
-		db()->update('user', array(
+		$affected_rows = db()->update('user', array(
 				'location' => $last_pt[0] . '|' . $last_pt[1],
 				'msg_id' => 
 			),
 			"`user_id` = " . $user['user_id'], 1);
-		db()->insert('events', array(
+		if ($affected_rows == 0) {
+			return array('err' => 'GAME_RESET', 'info' => 'update did not affect user');
+		}
+		$event_id = db()->insert('events', array(
 			'game_id' => $user['game_id'],
 			'type' => 'MOVE',
 			'data' => implode(':', $data)));
+		
+		maybe_do_state_update($event_id);
+		
+		$poll = get_poll_data($game_id);
+		
+		if ($poll['old']) return array('err' => 'OLD');
+		
+		return array(
+			'err' => 'OK',
+			'poll' => $poll);
 	}
 ?>

@@ -28,11 +28,7 @@ response: {
 		"events": { // only present if state is not present
 			"e{EVENT_ID}": { "type": type, "data": data }
 		},
-		"scores": {
-			{
-			  "user_ID": "score"
-			}
-		}
+		"scores": "{USER_ID}:{SCORE}:..."
 	}
 }
 

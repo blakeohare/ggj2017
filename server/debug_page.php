@@ -35,6 +35,10 @@
 <?
 	if ($api_result !== null) {	
 		echo json_encode($api_result, JSON_PRETTY_PRINT);
+		echo "\n\n";
+		echo '<span style="color:#aaa;">Received:' . "\n";
+		print_r($dbg_request->json);
+		echo '</span>';
 	}
 ?>
 </pre></div>
