@@ -49,22 +49,22 @@ class Player {
 		
 		if (this.isYou) {
 			this.updateForLocalPlayer();
-		}
-		
-		if (this.pointQueue.length > 0) {
-			pt = this.pointQueue[0];
-			targetX = pt[0];
-			targetY = pt[1];
-			dx = targetX - this.x;
-			dy = targetY - this.y;
-			distance = (dx ** 2 + dy ** 2) ** .5;
-			if (distance < PLAYER_VELOCITY) {
-				this.x = targetX;
-				this.y = targetY;
-				this.pointQueue.remove(0);
-			} else {
-				this.x = PLAYER_VELOCITY * dx / distance;
-				this.y = PLAYER_VELOCITY * dy / distance;
+		} else {
+			if (this.pointQueue.length > 0) {
+				pt = this.pointQueue[0];
+				targetX = pt[0];
+				targetY = pt[1];
+				dx = targetX - this.x;
+				dy = targetY - this.y;
+				distance = (dx ** 2 + dy ** 2) ** .5;
+				if (distance < PLAYER_VELOCITY) {
+					this.x = targetX;
+					this.y = targetY;
+					this.pointQueue.remove(0);
+				} else {
+					this.x += PLAYER_VELOCITY * dx / distance;
+					this.y += PLAYER_VELOCITY * dy / distance;
+				}
 			}
 		}
 	}

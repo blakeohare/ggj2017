@@ -14,7 +14,8 @@ class PlayScene : AbstractScene {
 	
 	field buttons;
 	field buttonKeys;
-	
+	field lastSyncTime = 0;
+	field syncRequest = null;
 	
 	constructor(gameId, userId, authToken) : base() {
 		this.gameId = gameId;
@@ -40,19 +41,18 @@ class PlayScene : AbstractScene {
 	
 	function applyPollData(pollData) {
 		if (pollData == null) return;
+		if (pollData.length == 0) return; // sometimes PHP converts this to an empty list.
 		
-		if (pollData.get('state') == null) {
-			this.applyIncrementalPollData(pollData);
-		} else {
-			this.applyAbsolutePollData(pollData);
-		}
+		this.applyAbsolutePollData(pollData);
+		
+		this.applyIncrementalPollData(pollData);
 		
 		this.lastEventId = Math.max(this.lastEventId, pollData['event_id_max']);
 	}
 	
 	function applyIncrementalPollData(pollData) {
-		minId = pollData.get('event_min_id');
-		maxId = pollData.get('event_max_id');
+		minId = pollData.get('event_id_min');
+		maxId = pollData.get('event_id_max');
 		events = pollData.get('events');
 		if (minId == null || maxId == null || events == null) return;
 		
@@ -71,6 +71,20 @@ class PlayScene : AbstractScene {
 						}
 					}
 					break;
+				
+				case 'JOIN':
+					data = event['data'].split(':');
+					userId = Core.parseInt(data[0]);
+					userName = data[1];
+					userX = Core.parseInt(data[2]);
+					userY = Core.parseInt(data[3]);
+					if (this.playersById.get(userId) == null) {
+						this.playersById[userId] = new Player(this, userId, userName, userX, userY);
+						this.userIds = this.playersById.keys();
+						this.userIds.sort();
+					}
+					break;
+					
 				default:
 					throw new Core.Exception("Unknown server event type: " + event['type'] + ' --> ' + event['data']);
 			}
@@ -78,7 +92,8 @@ class PlayScene : AbstractScene {
 	}
 	
 	function applyAbsolutePollData(pollData) {
-		state = pollData['state'];
+		state = pollData.get('state');
+		if (state == null) return;
 		userUpdatesRaw = state['user_data'].trim();
 		newPlayersById = {};
 		if (userUpdatesRaw.length > 0) {
@@ -124,6 +139,34 @@ class PlayScene : AbstractScene {
 		for (userId : this.userIds) {
 			player = this.playersById[userId];
 			player.update();
+		}
+		
+		if (this.lastSyncTime < Core.currentTime() - 1 && this.syncRequest == null) {
+			this.syncRequest = new NetworkMessage({
+				'action': 'POLL',
+				'user_id': this.playerId,
+				'token': this.authToken,
+				'game_id': this.gameId,
+				'event_id': this.lastEventId,
+			}).send();
+		}
+		
+		if (this.syncRequest != null && this.syncRequest.isDone()) {
+			if (this.syncRequest.isError()) {
+				// ignore?
+			} else {
+				syncResult = this.syncRequest.getResponse();
+				switch (syncResult['err']) {
+					case 'OK':
+						this.applyPollData(syncResult['poll']);
+						this.lastSyncTime = Core.currentTime();
+						break;
+					case 'GAME_RESET':
+						this.switchScene(new LoginScene("The game has restarted."));
+						return;
+				}
+			}
+			this.syncRequest = null;
 		}
 	}
 	
