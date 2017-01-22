@@ -20,7 +20,7 @@ class NetworkMessage {
 	
 	function send() {
 		// TODO: implement re-send/retry
-		this.httpRequest.send();
+		this.httpRequest.sendAsync();
 		//print("SENT: " + this.jsonRequest);
 		return this;
 	}
