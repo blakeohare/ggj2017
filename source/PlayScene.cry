@@ -218,7 +218,7 @@ class PlayScene : AbstractScene {
 		
 		for (userId : this.userIds) {
 			player = this.playersById[userId];
-			player.render(cameraOffsetX, cameraOffsetY);
+			player.render(cameraOffsetX, cameraOffsetY, rc);
 		}
 	}
 	

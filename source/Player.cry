@@ -3,6 +3,13 @@ import Math;
 
 const PLAYER_VELOCITY = 4.0;
 
+enum PlayerImageType {
+	WALK1,
+	WALK2,
+	WAVE1,
+	WAVE2,
+}
+
 class Player {
 	field playScene;
 	
@@ -16,8 +23,11 @@ class Player {
 	field nameLabel;
 	
 	field coordsLastSentAt = 0;
+	field movedThisFrame = false;
 	
 	field coordSendRequest = null;
+	
+	field images;
 	
 	// this is used by the send queue for the current player to make a good guess for consolidating movement vectors.
 	field angle = 0;
@@ -38,7 +48,22 @@ class Player {
 		this.x = x + 0.0;
 		this.y = y + 0.0;
 		this.name = name;
-		this.nameLabel = UIText.create(0, 0, name, 'black', FontSize.XS);
+		this.nameLabel = UIText.create(0, 0, name, 'black', FontSize.S);
+		this.initImages();
+	}
+	
+	function initImages() {
+		code = 0;
+		for (char : this.name) {
+			code = code ^ Core.ord(char);
+		}
+		color = ['purple', 'green', 'blue', 'yellow'][code % 4];
+		this.images = {
+			PlayerImageType.WALK1: ImageLibrary.get('sprites/' + color + '/walk1.png'),
+			PlayerImageType.WALK2: ImageLibrary.get('sprites/' + color + '/walk2.png'),
+			PlayerImageType.WAVE1: ImageLibrary.get('sprites/' + color + '/wave1.png'),
+			PlayerImageType.WAVE2: ImageLibrary.get('sprites/' + color + '/wave2.png'),
+		};
 	}
 	
 	function addPoint(pt) {
@@ -47,6 +72,7 @@ class Player {
 	
 	function update() {
 		
+		this.movedThisFrame = false;
 		if (this.isYou) {
 			this.updateForLocalPlayer();
 		} else {
@@ -65,6 +91,7 @@ class Player {
 					this.x += PLAYER_VELOCITY * dx / distance;
 					this.y += PLAYER_VELOCITY * dy / distance;
 				}
+				this.movedThisFrame = true;
 			}
 		}
 	}
@@ -80,6 +107,7 @@ class Player {
 			theta = Math.floor(30 * Math.arctan(dy, dx) / (2 * Math.PI)); // if you're within 1/30th circle sector of the original movement, then aggregate the movement requests
 			this.x += dx;
 			this.y += dy;
+			this.movedThisFrame = true;
 			xInt = Math.floor(this.x);
 			yInt = Math.floor(this.y);
 			
@@ -149,11 +177,16 @@ class Player {
 		this.coordsLastSentAt = Core.currentTime();
 	}
 	
-	function render(cameraOffsetX, cameraOffsetY) {
+	function render(cameraOffsetX, cameraOffsetY, rc) {
 		px = Math.floor(this.x) + cameraOffsetX;
 		py = Math.floor(this.y) + cameraOffsetY;
 		if (px > -50 && px < SCREEN_WIDTH + 50 && py > -50 && py < SCREEN_HEIGHT + 50) {
-			Draw.ellipse(px - 10, py - 10, 20, 20, 255, 0, 0);
+			if (this.movedThisFrame && (rc / 30) % 2 == 0) {
+				img = this.images[PlayerImageType.WALK2];
+			} else {
+				img = this.images[PlayerImageType.WALK1];
+			}
+			img.draw(px - img.width / 2, py - img.height);
 			nl = this.nameLabel;
 			nl.x = px - nl.width / 2;
 			nl.y = py + 15;
