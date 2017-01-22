@@ -18,7 +18,7 @@ class LoginScene : AbstractScene {
 		this.addElement(new UIRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 255, 255, 255, 255));
 		
 		this.addElement(UIText.create(10, 10, "Choose A Name", 'black', FontSize.M));
-		this.addElement(UIText.create(10, 50, errorMessage, 'black', FontSize.M));
+		this.addElement(UIText.create(10, 50, errorMessage, 'red', FontSize.M));
 		
 		xWidth = 45;
 		xMargin = 15;
@@ -45,7 +45,7 @@ class LoginScene : AbstractScene {
 		
 		y += 50;
 		x = 10;
-		this.nameLabel = UIText.create(x, y, "", 'black', FontSize.L);
+		this.nameLabel = UIText.create(x, y, "", 'blue', FontSize.L);
 		this.addElement(this.nameLabel);
 		
 	}
