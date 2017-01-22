@@ -1,9 +1,62 @@
+import Json;
+import Http;
+
+const URL_PREFIX = 'http://wavingsimulator2017.wtf';
+
 class NetworkPump {
 	
-	field sending = [];
-	field received = [];
+	static field sending = [];
+	static field received = [];
+	static field msgId = 1;
 	
 	constructor() {
+		
+	}
+}
+
+class NetworkMessage {
+	field jsonRequest;
+	field jsonResponse;
+	field httpRequest;
+	field _isDone = false;
+	field _isError = false;
 	
+	constructor(payload) {
+		payload['msg_id'] = ++NetworkPump.msgId;
+		this.jsonRequest = Json.serialize(payload);
+		this.httpRequest = new HttpRequest(URL_PREFIX + '/api.php')
+			.setMethod('POST')
+			.setContent(this.jsonRequest, 'application/json');
+	}
+	
+	function send() {
+		// TODO: implement re-send/retry
+		this.httpRequest.send();
+		print("SENT: " + this.jsonRequest);
+		return this;
+	}
+	
+	function isDone() {
+		if (this._isDone) return true;
+		if (this.httpRequest.isDone()) {
+			this._isDone = true;
+			response = this.httpRequest.getResponse();
+			if (response.getStatusCode() == 200) {
+				this.jsonResponse = response.getContent();
+				print("RECV: " + this.jsonResponse);
+			} else {
+				this._isError = true;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	function isError() {
+		return this._isError;
+	}
+	
+	function getResponse() {
+		return Json.parseJson(this.jsonResponse);
 	}
 }

@@ -7,7 +7,7 @@ class UIRectangle : UIElement {
 	field blue;
 	field alpha;
 	
-	constructor(x, y, width, height, r, g, b, a) : base(x, y, width, height) {
+	constructor(x, y, width, height, r, g, b, a = 255) : base(x, y, width, height) {
 		this.red = r;
 		this.green = g;
 		this.blue = b;

@@ -1,0 +1,59 @@
+import Math;
+import Random;
+
+class JoiningScene : AbstractScene {
+	
+	field joinToken;
+	field username;
+	field joiningLabel;
+	field joinRequest;
+	
+	constructor(username) : base() {
+		this.addElement(new UIRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0));
+		this.joiningLabel = UIText.create(10, 10, "Joining", 'white', FontSize.L);
+		this.joinToken = Random.randomInt(100000000) + '';
+		this.username = username;
+	}
+	
+	function update(input) {
+		dots = Math.floor(4 * (Core.currentTime() % 1));
+		this.joiningLabel.text = "Joining" + ('.' * dots);
+		
+		if (this.joinRequest == null) {
+			this.joinRequest = new NetworkMessage({
+				'name': this.username,
+				'join_token': this.joinToken,
+				'action': 'JOIN',
+			}).send();
+		}
+		
+		if (this.joinRequest.isDone()) {
+			if (this.joinRequest.isError()) {
+				this.switchScene(new LoginScene("Could not reach server"));
+				return;
+			}
+			response = this.joinRequest.getResponse();
+			err = response.get('err', 'UNKNOWN') + '';
+			
+			switch (err) {
+				case 'OK':
+					playScene = new PlayScene(response['user_id']);
+					this.switchScene(new FadeTransitionScene(this, playScene));
+					return;
+				case 'NAME_IN_USE':
+					this.switchScene(new LoginScene("That name is already used."));
+					return;
+				case 'INVALID_NAME':
+					this.switchScene(new LoginScene("Name too short."));
+					return;
+				case 'SERVER_FULL':
+					this.switchScene(new LoginScene("Server is at capacity."));
+					return;
+				case 'UNKNOWN':
+				default:
+					this.switchScene(new LoginScene("Server gave unknown response."));
+					return;
+			}
+		}
+	}
+}

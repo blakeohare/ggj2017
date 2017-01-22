@@ -1,6 +1,9 @@
 class PlayScene : AbstractScene {
-	constructor() : base() {
-		
+	field playerId;
+	
+	constructor(userId) : base() {
+		this.playerId = userId;
+		print("User ID is: " + this.playerId);
 	}
 	
 	function update(input) {
