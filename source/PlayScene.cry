@@ -1,5 +1,6 @@
 import Math;
 import Graphics2D;
+import Random;
 
 class PlayScene : AbstractScene {
 	field gameId;
@@ -212,9 +213,57 @@ class PlayScene : AbstractScene {
 		
 		cameraOffsetX = Math.floor(-this.cameraX + SCREEN_WIDTH / 2 + .5);
 		cameraOffsetY = Math.floor(-this.cameraY + SCREEN_HEIGHT / 2 + .5);
+		
+		this.renderBackground(cameraOffsetX, cameraOffsetY);
+		
 		for (userId : this.userIds) {
 			player = this.playersById[userId];
 			player.render(cameraOffsetX, cameraOffsetY);
+		}
+	}
+	
+	field randNums = this.getRandNums();
+	function getRandNums() {
+		output = [];
+		for (y = 0; y < 20; ++y) {
+			col = [];
+			for (x = 0; x < 20; ++x) {
+				col.add(Random.randomInt(200, 250));
+			}
+			output.add(col);
+		}
+		return output;
+	}
+	
+	function renderBackground(cxOffset, cyOffset) {
+		colMin = Math.floor(this.cameraX - this.cameraX % 100 - SCREEN_WIDTH / 2);
+		rowMin = Math.floor(this.cameraY - this.cameraY % 100 - SCREEN_HEIGHT / 2);
+		colMax = colMin + SCREEN_WIDTH;
+		rowMax = rowMin + SCREEN_HEIGHT;
+		for (col = colMin; col <= colMax; col += 100) {
+			for (row = rowMin; row <= rowMax; row += 100) {
+				cn = col / 100;
+				rn = row / 100;
+				color = this.randNums[cn % 20][rn % 20];
+				
+				if (Math.abs(cn) < 15 && Math.abs(rn) < 15) {
+					if (Math.abs(cn) < 10 && Math.abs(rn) < 7) {
+						r = color;
+						g = 255;
+						b = color;
+					} else {
+						r = color;
+						g = color;
+						b = 255;
+					}
+				} else {
+					r = color / 3;
+					g = color / 4;
+					b = color / 4;
+				}
+				
+				Draw.rectangle(col + cxOffset, row + cyOffset, 100, 100, r, g, b, 255);
+			}
 		}
 	}
 }
