@@ -39,13 +39,15 @@ class PlayScene : AbstractScene {
 	}
 	
 	function applyPollData(pollData) {
+		if (pollData == null) return;
+		
 		if (pollData.get('state') == null) {
 			this.applyIncrementalPollData(pollData);
 		} else {
 			this.applyAbsolutePollData(pollData);
 		}
 		
-		this.lastEventId = pollData['event_id_max'];
+		this.lastEventId = Math.max(this.lastEventId, pollData['event_id_max']);
 	}
 	
 	function applyIncrementalPollData(pollData) {
@@ -78,6 +80,8 @@ class PlayScene : AbstractScene {
 	}
 	
 	function update(input) {
+		you = this.playersById[this.playerId];
+		
 		if (input.pressed) {
 			mx = input.mouseX;
 			my = input.mouseY;

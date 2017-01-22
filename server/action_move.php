@@ -24,7 +24,7 @@
 			case 'OK': break;
 			case 'MISSING': return array('err' => 'GAME_RESET', 'info' => $user_info);
 			case 'LATENCY': return array('err' => 'OLD');
-			case 'GAME_RESET': return array('err' => 'GAME_REST');
+			case 'GAME_RESET': return array('err' => 'GAME_RESET');
 			default: return array('err' => "NOT_IMPLEMENTED", 'info' => $user_info['err']);
 		}
 		$user_id = $user_info['user_id'];

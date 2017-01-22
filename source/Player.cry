@@ -103,15 +103,49 @@ class Player {
 		if (this.pointSendQueue.length > 0 && now > this.coordsLastSentAt + 2 && this.coordSendRequest == null) {
 			this.sendCoordsToNetwork();
 		}
+		
+		if (this.coordSendRequest != null && this.coordSendRequest.isDone()) {
+			if (this.coordSendRequest.isError()) {
+				// ignore, I guess?
+			} else {
+				response = this.coordSendRequest.getResponse();
+				switch (response['err']) {
+					case 'OK':
+						this.playScene.applyPollData(response.get('poll'));
+						break;
+					case 'GAME_RESET':
+						this.playScene.switchScene(new LoginScene("The game was reset"));
+						return;
+					case 'INVALID':
+						this.playScene.switchScene(new LoginScene("Invalid request sent"));
+						return;
+					case 'OLD':
+						// ignore, I guess?
+						return;
+					default:
+						this.playScene.switchScene(new LoginScene("Server sent unknown response: '" + response['err'] + "'"));
+						return;
+				}
+			}
+			this.coordSendRequest = null;
+		}
 	}
 	
 	function sendCoordsToNetwork() {
+		pts = [];
+		for (pt : this.pointSendQueue) {
+			pts.add(pt[0] + ',' + pt[1]);
+		}
+		this.pointSendQueue.clear();
+		
 		this.coordSendRequest = new NetworkMessage({
 			'action': 'MOVE',
 			'user_id': this.playScene.playerId,
 			'token': this.playScene.authToken,
 			'event_id': this.playScene.lastEventId,
-		});
+			'game_id': this.playScene.gameId,
+			'pts': pts.join(':'),
+		}).send();
 	}
 	
 	function render(cameraOffsetX, cameraOffsetY) {
