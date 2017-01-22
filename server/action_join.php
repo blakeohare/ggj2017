@@ -30,7 +30,7 @@
 			return array('err' => "JOIN_TOKEN_REQUIRED");
 		}
 		
-		$existing_user = db()->select_by_id('users', 'name', $name, array('name', 'token', 'join_token', 'user_id', 'game_id'));
+		$existing_user = db()->select_by_id('users', 'name_lookup', strtolower($name), array('name', 'token', 'join_token', 'user_id', 'game_id'));
 		if ($existing_user !== null) {
 			if ($join_token == $existing_user['join_token']) {
 				// this is actually the same user
@@ -63,6 +63,7 @@
 			'users', 
 			array(
 				'name' => $name,
+				'name_lookup' => strtolower($name),
 				'token' => $token,
 				'location' => $x . '|' . $y,
 				'score' => 0,

@@ -144,8 +144,9 @@ class Player {
 			'token': this.playScene.authToken,
 			'event_id': this.playScene.lastEventId,
 			'game_id': this.playScene.gameId,
-			'pts': pts.join(':'),
+			'pts': pts.join('|'),
 		}).send();
+		this.coordsLastSentAt = Core.currentTime();
 	}
 	
 	function render(cameraOffsetX, cameraOffsetY) {

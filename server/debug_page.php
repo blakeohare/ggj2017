@@ -16,7 +16,7 @@
 
 <h1>API Debug</h1>
 
-<form action="/index.php", method="POST">
+<form action="/api.php", method="POST">
 <value type="hidden" name="debug" value="1"/>
 
 <div>

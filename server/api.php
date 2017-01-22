@@ -49,6 +49,10 @@
 				require 'action_poll.php';
 				return action_poll($request);
 			
+			case 'RESET':
+				require 'action_reset.php';
+				return action_reset($request);
+			
 			default:
 				return array('err' => "UNKNOWN_ACTION");
 		}

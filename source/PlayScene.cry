@@ -51,7 +51,30 @@ class PlayScene : AbstractScene {
 	}
 	
 	function applyIncrementalPollData(pollData) {
-		print("Apply incremental: " + pollData);
+		minId = pollData.get('event_min_id');
+		maxId = pollData.get('event_max_id');
+		events = pollData.get('events');
+		if (minId == null || maxId == null || events == null) return;
+		
+		for (eventId = minId; eventId <= maxId; ++eventId) {
+			event = events['e' + eventId];
+			switch (event['type']) {
+				case 'MOVE':
+					data = event['data'].split(':');
+					userId = Core.parseInt(data[0]);
+					user = this.playersById.get(userId);
+					if (user != null) {
+						for (i = 1; i < data.length; i += 2) {
+							x = Core.parseInt(data[i]);
+							y = Core.parseInt(data[i + 1]);
+							user.pointQueue.add([x, y]);
+						}
+					}
+					break;
+				default:
+					throw new Core.Exception("Unknown server event type: " + event['type'] + ' --> ' + event['data']);
+			}
+		}
 	}
 	
 	function applyAbsolutePollData(pollData) {
