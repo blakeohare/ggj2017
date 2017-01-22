@@ -25,6 +25,10 @@
 		$event_id = intval($request->json['event_id']);
 		$game_id = intval($request->json['game_id']);
 		
+		if ($game_id == 0 && strtoupper($request->json['action']) == 'JOIN') {
+			$game_id = get_current_game_id();
+		}
+		
 		$events_db = db()->select("
 			SELECT
 				`event_id`,
@@ -45,6 +49,7 @@
 					'user_data' => $latest_state['user_data'],
 					'wave_data' => $latest_state['wave_data']),
 				'event_id_max' => $latest_state['includes_event_id'],
+				'info_game_id' => $game_id,
 				'scores' => get_leaderboard($game_id)
 			);
 		}
@@ -131,7 +136,12 @@
 		
 		$new_db_state_id = 0;
 		if ($last_full_state['time'] < time() - 20) {
-			$new_db_state_id = db()->insert('states', array('game_id' => $game_id, 'time' => time(), 'populated' => 0));
+			$new_db_state_id = db()->insert(
+				'states', 
+				array(
+					'game_id' => $game_id,
+					'time' => time(),
+					'populated' => 0));
 		}
 		
 		// get the existing data
@@ -159,7 +169,6 @@
 		
 		// now iterate through all events since then and flatten them.
 		$events = db()->select("SELECT `event_id`,`game_id`,`time`,`type`,`data` FROM `events` WHERE `event_id` > $last_full_state_event_id ORDER BY `event_id`");
-		$last_event_id = null;
 		while ($events->has_more()) {
 			$event = $events->next();
 			$last_full_state_event_id = intval($event['event_id']);
@@ -167,7 +176,7 @@
 				case 'MOVE':
 					$move_data = parse_move_and_get_last($event['data']);
 					$user_id = $move_data['user_id'];
-					if (isset($user_info__by_id[$user_id])) { // just in case a move was sent after a part
+					if (isset($user_info_by_id[$user_id])) { // just in case a move was sent after a part
 						$user_info_by_id[$user_id][2] = $move_data['x'];
 						$user_info_by_id[$user_id][3] = $move_data['y'];
 					}
@@ -202,10 +211,11 @@
 		
 		$user_data = implode('|', $user_data);
 		$wave_data = implode('|', $wave_data);
-		if ($new_db_state_id != 0 && $last_event_id !== null) {
+		if ($new_db_state_id != 0 && $last_full_state_event_id !== null) {
 			db()->update('states', 
 				array(
-					'includes_event_id' => $last_event_id,
+					'game_id' => $game_id,
+					'includes_event_id' => $last_full_state_event_id,
 					'populated' => 1,
 					'user_data' => $user_data,
 					'wave_data' => $wave_data),

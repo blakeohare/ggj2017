@@ -53,6 +53,10 @@
 				require 'action_reset.php';
 				return action_reset($request);
 			
+			case 'LATEST_STATE':
+				require 'action_latest_state.php';
+				return action_latest_state($request);
+			
 			default:
 				return array('err' => "UNKNOWN_ACTION");
 		}

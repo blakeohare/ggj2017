@@ -63,7 +63,7 @@ class PlayScene : AbstractScene {
 					data = event['data'].split(':');
 					userId = Core.parseInt(data[0]);
 					user = this.playersById.get(userId);
-					if (user != null) {
+					if (user != null && !user.isYou) {
 						for (i = 1; i < data.length; i += 2) {
 							x = Core.parseInt(data[i]);
 							y = Core.parseInt(data[i + 1]);
