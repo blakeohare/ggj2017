@@ -1,0 +1,45 @@
+import Graphics2D;
+
+class UIButton : UIElement {
+	
+	field red = 0;
+	field green = 0;
+	field blue = 0;
+	field alpha = 128;
+	field textElement = null;
+	field id = null;
+	field handler = null;
+	
+	constructor(x, y, width, height, label, textColor, size = FontSize.S) : base(x, y, width, height) {
+		this.textElement = UIText.create(x, y, label, textColor, size);
+		this.textElement.x = x + (width - this.textElement.width) / 2;
+		this.textElement.y = y + (height - this.textElement.height) / 2;
+		this.isHitTestable = true;
+	}
+	
+	function render(rc) {
+		Draw.rectangle(this.x, this.y, this.width, this.height, this.red, this.green, this.blue, this.alpha);
+		this.textElement.render(rc);
+	}
+	
+	function setHandler(handler) {
+		this.handler = handler;
+		return this;
+	}
+	
+	function setId(id) {
+		this.id = id;
+		return this;
+	}
+	
+	function setOpacity(value) {
+		this.alpha = value;
+		return this;
+	}
+	
+	function click() {
+		if (this.handler != null) {
+			this.handler(this.id);
+		}
+	}
+}
