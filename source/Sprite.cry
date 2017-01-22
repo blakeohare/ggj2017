@@ -1,0 +1,123 @@
+import Graphics2D;
+import Math;
+
+const PLAYER_VELOCITY = 4.0;
+
+class Player {
+	field playScene;
+	
+	field id;
+	field x;
+	field y;
+	field pointQueue = [];
+	
+	field isYou = false;
+	field name;
+	
+	field coordsLastSentAt = 0;
+	
+	field coordSendRequest = null;
+	
+	// this is used by the send queue for the current player to make a good guess for consolidating movement vectors.
+	field angle = 0;
+	
+	// points to report to the server
+	field pointSendQueue = [];
+	
+	// the angle that the last point was added at
+	field pointSendQueueLastAngle;
+	
+	// movement request for current player
+	field dx = 0;
+	field dy = 0;
+	
+	constructor(playScene, id, name, x, y) {
+		this.playScene = playScene;
+		this.id = id;
+		this.x = x + 0.0;
+		this.y = y + 0.0;
+		this.name = name;
+	}
+	
+	function addPoint(pt) {
+		this.pointQueue.add(pt);
+	}
+	
+	function update() {
+		
+		if (this.isYou) {
+			this.updateForLocalPlayer();
+		}
+		
+		if (this.pointQueue.length > 0) {
+			pt = this.pointQueue[0];
+			targetX = pt[0];
+			targetY = pt[1];
+			dx = targetX - this.x;
+			dy = targetY - this.y;
+			distance = (dx ** 2 + dy ** 2) ** .5;
+			if (distance < PLAYER_VELOCITY) {
+				this.x = targetX;
+				this.y = targetY;
+				this.pointQueue.remove(0);
+			} else {
+				this.x = PLAYER_VELOCITY * dx / distance;
+				this.y = PLAYER_VELOCITY * dy / distance;
+			}
+		}
+	}
+	
+	function updateForLocalPlayer() {
+		now = Core.currentTime();
+		if (this.dx != 0 || this.dy != 0) {
+			distance = (this.dx ** 2 + this.dy ** 2) ** .5;
+			dx = PLAYER_VELOCITY * this.dx / distance;
+			dy = PLAYER_VELOCITY * this.dy / distance;
+			this.dx = 0;
+			this.dy = 0;
+			theta = Math.floor(30 * Math.arctan(dy, dx) / (2 * Math.PI)); // if you're within 1/30th circle sector of the original movement, then aggregate the movement requests
+			this.x += dx;
+			this.y += dy;
+			xInt = Math.floor(this.x);
+			yInt = Math.floor(this.y);
+			
+			if (this.pointSendQueue.length == 0) {
+				// if there was nothing to send until now, go ahead and reset the delay such that you don't
+				// send a request to move 1 frame worth of pixels and then 2 seconds later you send 2 seconds 
+				// worth of movement.
+				this.coordsLastSentAt = now;
+			}
+			
+			if (this.pointSendQueue.length > 0 && this.pointSendQueueLastAngle == theta) {
+				lastPt = this.pointSendQueue[-1];
+				lastPt[0] = xInt;
+				lastPt[1] = yInt;
+			} else {
+				this.pointSendQueueLastAngle = theta;
+				this.pointSendQueue.add([xInt, yInt]);
+			}
+		}
+		
+		if (this.pointSendQueue.length > 0 && now > this.coordsLastSentAt + 2 && this.coordSendRequest == null) {
+			this.sendCoordsToNetwork();
+		}
+	}
+	
+	function sendCoordsToNetwork() {
+		this.coordSendRequest = new NetworkMessage({
+			'action': 'MOVE',
+			'user_id': this.playScene.playerId,
+			'token': this.playScene.authToken,
+			'event_id': this.playScene.lastEventId,
+		});
+	}
+	
+	function render(cameraOffsetX, cameraOffsetY) {
+		px = Math.floor(this.x) + cameraOffsetX;
+		py = Math.floor(this.y) + cameraOffsetY;
+		print([px, py]);
+		if (px > -50 && px < SCREEN_WIDTH + 50 && py > -50 && py < SCREEN_HEIGHT + 50) {
+			Draw.ellipse(px - 10, py - 10, 20, 20, 255, 0, 0);
+		}
+	}
+}

@@ -37,7 +37,8 @@ class JoiningScene : AbstractScene {
 			
 			switch (err) {
 				case 'OK':
-					playScene = new PlayScene(response['user_id']);
+					playScene = new PlayScene(response['game_id'], response['user_id'], response['token']);
+					playScene.applyPollData(response['poll']);
 					this.switchScene(new FadeTransitionScene(this, playScene));
 					return;
 				case 'NAME_IN_USE':
