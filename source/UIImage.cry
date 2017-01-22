@@ -4,4 +4,8 @@ class UIImage : UIElement {
 	constructor(x, y, img) : base(x, y, img.width, img.height) {
 		this.img = img;
 	}
+	
+	function render(rc) {
+		this.img.draw(this.x, this.y);
+	}
 }

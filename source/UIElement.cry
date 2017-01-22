@@ -17,4 +17,9 @@ class UIElement {
 		this.lastBounds = [this.x, this.y, this.x + this.width, this.y + this.height];
 		return this.lastBounds;
 	}
+	
+	function inBounds(x, y) {
+		bounds = this.lastBounds ?? this.getBounds();
+		return x >= bounds[0] && x < bounds[2] && y >= bounds[1] && y < bounds[3];
+	}
 }

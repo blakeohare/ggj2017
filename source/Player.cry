@@ -13,6 +13,7 @@ class Player {
 	
 	field isYou = false;
 	field name;
+	field nameLabel;
 	
 	field coordsLastSentAt = 0;
 	
@@ -37,6 +38,7 @@ class Player {
 		this.x = x + 0.0;
 		this.y = y + 0.0;
 		this.name = name;
+		this.nameLabel = UIText.create(0, 0, name, 'black', FontSize.XS);
 	}
 	
 	function addPoint(pt) {
@@ -115,9 +117,12 @@ class Player {
 	function render(cameraOffsetX, cameraOffsetY) {
 		px = Math.floor(this.x) + cameraOffsetX;
 		py = Math.floor(this.y) + cameraOffsetY;
-		print([px, py]);
 		if (px > -50 && px < SCREEN_WIDTH + 50 && py > -50 && py < SCREEN_HEIGHT + 50) {
 			Draw.ellipse(px - 10, py - 10, 20, 20, 255, 0, 0);
+			nl = this.nameLabel;
+			nl.x = px - nl.width / 2;
+			nl.y = py + 15;
+			nl.render(0);
 		}
 	}
 }

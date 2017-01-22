@@ -1,8 +1,12 @@
+
 class InputState {
 	field mouseX = 0;
 	field mouseY = 0;
-	field isMouseDown = false;
+	field pressed = false;
 	field clicked = false;
+	
+	field pushedKeys = {};
+	
 	
 	constructor() { }
 }

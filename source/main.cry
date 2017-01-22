@@ -34,6 +34,32 @@ function main() {
 					input.mouseX = event.x;
 					input.mouseY = event.y;
 					break;
+				
+				case EventType.KEY_DOWN:
+				case EventType.KEY_UP:
+					key = null;
+					switch (event.key) {
+						case KeyboardKey.UP:
+						case KeyboardKey.W:
+							key = 'up';
+							break;
+						case KeyboardKey.DOWN:
+						case KeyboardKey.S:
+							key = 'down';
+							break;
+						case KeyboardKey.LEFT:
+						case KeyboardKey.A:
+							key = 'left';
+							break;
+						case KeyboardKey.RIGHT:
+						case KeyboardKey.D:
+							key = 'right';
+							break;
+					}
+					if (key != null) {
+						input.pushedKeys[key] = event.type == EventType.KEY_DOWN;
+					}
+					break;
 			}
 		}
 		

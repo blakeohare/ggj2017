@@ -1,3 +1,4 @@
+import Math;
 import Graphics2D;
 
 class PlayScene : AbstractScene {
@@ -6,15 +7,35 @@ class PlayScene : AbstractScene {
 	field authToken;
 	field lastEventId = 0;
 	
-	field cameraX = 0;
-	field cameraY = 0;
+	field cameraX = null;
+	field cameraY = null;
 	field playersById = {};
 	field userIds = [];
+	
+	field buttons;
+	field buttonKeys;
+	
 	
 	constructor(gameId, userId, authToken) : base() {
 		this.gameId = gameId;
 		this.playerId = userId;
 		this.authToken = authToken;
+		
+		cols = [SCREEN_WIDTH - 200, SCREEN_WIDTH - 130, SCREEN_WIDTH - 70];
+		rows = [SCREEN_HEIGHT - 200, SCREEN_HEIGHT - 130, SCREEN_HEIGHT - 70];
+		
+		this.buttons = {
+			'up': new UIImage(cols[1], rows[0], ImageLibrary.getAtScale('arrow_up.png', .5)),
+			'down': new UIImage(cols[1], rows[2], ImageLibrary.getAtScale('arrow_down.png', .5)),
+			'left': new UIImage(cols[0], rows[1], ImageLibrary.getAtScale('arrow_left.png', .5)),
+			'right': new UIImage(cols[2], rows[1], ImageLibrary.getAtScale('arrow_right.png', .5)),
+			'wave': new UIImage(cols[1], rows[1], ImageLibrary.getAtScale('button_wave.png', .5))
+		};
+		this.buttonKeys = this.buttons.keys();
+		
+		for (button : this.buttons.values()) {
+			this.addElement(button);
+		}
 	}
 	
 	function applyPollData(pollData) {
@@ -57,13 +78,70 @@ class PlayScene : AbstractScene {
 	}
 	
 	function update(input) {
+		if (input.pressed) {
+			mx = input.mouseX;
+			my = input.mouseY;
+			for (buttonId : this.buttonKeys) {
+				button = this.buttons[buttonId];
+				if (button.inBounds(mx, my)) {
+					this.buttonPushed(buttonId, input.clicked);
+				}
+			}
+		}
+		pushedKeys = input.pushedKeys;
+		if (pushedKeys.get('left', false)) this.buttonPushed('left', false);
+		else if (pushedKeys.get('right', false)) this.buttonPushed('right', false);
+		if (pushedKeys.get('up', false)) this.buttonPushed('up', false);
+		else if (pushedKeys.get('down', false)) this.buttonPushed('down', false);
 		
+		for (userId : this.userIds) {
+			player = this.playersById[userId];
+			player.update();
+		}
+	}
+	
+	function buttonPushed(id, clickedThisFrame) {
+		player = this.playersById[this.playerId];
+		switch (id) {
+			case 'wave':
+				if (clickedThisFrame) {
+					this.doWave();
+				}
+				break;
+			case 'left':
+				player.dx = -10;
+				break;
+			case 'right':
+				player.dx = 10;
+				break;
+			case 'up':
+				player.dy = -10;
+				break;
+			case 'down':
+				player.dy = 10;
+				break;
+		}
+	}
+	
+	function doWave() {
+		print("Do wave.");
 	}
 	
 	function render(rc) {
 		Draw.fill(255, 255, 255);
-		cameraOffsetX = -this.cameraX + SCREEN_WIDTH / 2;
-		cameraOffsetY = -this.cameraY + SCREEN_HEIGHT / 2;
+		player = this.playersById[this.playerId];
+		targetX = player.x;
+		targetY = player.y;
+		if (this.cameraX == null) {
+			this.cameraX = targetX;
+			this.cameraY = targetY;
+		} else {
+			this.cameraX = (this.cameraX * 19 + targetX) / 20.0;
+			this.cameraY = (this.cameraY * 19 + targetY) / 20.0;
+		}
+		
+		cameraOffsetX = Math.floor(-this.cameraX + SCREEN_WIDTH / 2 + .5);
+		cameraOffsetY = Math.floor(-this.cameraY + SCREEN_HEIGHT / 2 + .5);
 		for (userId : this.userIds) {
 			player = this.playersById[userId];
 			player.render(cameraOffsetX, cameraOffsetY);
