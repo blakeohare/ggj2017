@@ -37,6 +37,7 @@ function main() {
 			}
 		}
 		
+		activeScene.doHitTesting(input);
 		activeScene.update(input);
 		activeScene.renderUI(rc++);
 		

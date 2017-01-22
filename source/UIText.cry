@@ -13,12 +13,21 @@ class UIText : UIElement {
 	
 	field images = [];
 	field spaceWidth = 0;
+	field text = '';
+	field _renderedText = '';
+	field lastColor = 'white';
+	field lastSize = FontSize.S;
 	
 	@private
 	constructor(x, y) : base(x, y, 0, 0) {
 	}
 	
 	function render(rc) {
+		if (this._renderedText != this.text) {
+			this._renderedText = this.text;
+			this.setText(this.text, this.lastColor, this.lastSize);
+		}
+		
 		x = this.x;
 		y = this.y;
 		for (img : this.images) {
@@ -37,7 +46,10 @@ class UIText : UIElement {
 		return element;
 	}
 	
-	function setText(text, color, size) {
+	function setText(text, color = null, size = null) {
+		this.lastColor = color ?? this.lastColor;
+		this.lastSize = size ?? this.lastSize;
+		
 		key = color + ':' + size;
 		font = UIText.fonts_by_key.get(key);
 		if (font == null) {

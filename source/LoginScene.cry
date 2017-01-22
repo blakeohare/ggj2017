@@ -2,14 +2,15 @@ class LoginScene : AbstractScene {
 	
 	field counter = 0;
 	field subCounter = 0;
-	field label = null;
+	field nameLabel = null;
+	field currentName = '';
 	
 	field buttons = [
 	"A B C D E F G H I J K L M",
 	"N O P Q R S T U V W X Y Z",
 	"a b c d e f g h i j k l m",
 	"n o p q r s t u v w x y z",
-	"0 1 2 3 4 5 6 7 8 9 Done",
+	"0 1 2 3 4 5 6 7 8 9 Done <",
 	];
 	
 	constructor() : base() {
@@ -28,7 +29,7 @@ class LoginScene : AbstractScene {
 			for (label : labels) {
 				width = xWidth;
 				if (label == "Done") {
-					width = xWidth * 3 + xMargin * 2;
+					width = xWidth * 2 + xMargin;
 				}
 				button = new UIButton(x, y, width, 36, label, 'white', FontSize.S)
 					.setOpacity(190)
@@ -36,19 +37,47 @@ class LoginScene : AbstractScene {
 					.setHandler(this.clickButton);
 					
 				this.addElement(button);
-				x += xSpacing;
+				x += width + xMargin;
 			}
 			y += 50;
 		}
 		
+		y += 50;
+		x = 10;
+		this.nameLabel = UIText.create(x, y, "", 'black', FontSize.L);
+		this.addElement(this.nameLabel);
+		
 	}
 	
 	function update(input) {
-		this.doHitTesting(input);
+		this.counter++;
+		if (this.counter % FPS < FPS / 2) {
+			this.nameLabel.text = this.currentName;
+		} else {
+			this.nameLabel.text = this.currentName + '_';
+		}
 	}
 	
 	function clickButton(id) {
-		print("Click on: '" + id + "'");
+		switch (id) {
+			case 'Done':
+				this.register();
+				break;
+				
+			case '<':
+				this.currentName = this.currentName[:-1];
+				break;
+				
+			default:
+				if (id.length == 1) {
+					this.currentName += id;
+				}
+				break;
+		}
+	}
+	
+	function register() {
+		print("Trying to join with '" + this.currentName + "'");
 	}
 	
 	

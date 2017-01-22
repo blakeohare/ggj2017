@@ -20,7 +20,7 @@
 	
 	<target name="js_remote">
 		<platform>game-javascript</platform>
-		<jsfileprefix>/games/spacezelda/</jsfileprefix>
+		<jsfileprefix>/game/</jsfileprefix>
 	</target>
 	
 	<target name="csharp">
