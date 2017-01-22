@@ -3,8 +3,8 @@ EVENTS:
 - MOVE:{USER_ID}:{X1}:{Y1}:{X2}:{Y2}:...
 - JOIN:{USER_ID}:{NAME}:{X}:{Y}
 - PART:{USER_ID}
-- WAVE_INIT:{USER_ID}:{WAVE_ID}:{X1}:{Y1}:{X2}:{Y2}:{X3}:{Y3}
-- WAVE_RECV:{BY_USER_ID}:{ORIGIN_USER_ID}:{WAVE_ID}
+- WAVE_INIT:{USER_ID}:{WAVE_ID}:{ORIGIN1}:{ORIGIN1}:{X2}:{Y2}:{X3}:{Y3}
+- WAVE_RECV:{WAVE_ID}:{BY_USER_ID}:{ORIGIN_USER_ID}
 - WAVE_GIVE_UP:{WAVE_ID}
 
 POLL (all these response and request fields are present on all requests)
@@ -67,23 +67,6 @@ request {
 
 response {
   "err": "OK",
-}
-
--------------------------------------------------------
-
-WAVE_INIT
-request: {
-	"user_token": "TOKEN"
-	"event_id": ...
-	"target": "X1,Y1,X2,Y2,X3,Y3"
-	"msg_id": ...
-}
-
-response: {
-	"err": OK | GAME_RESET | INVALID
-	"user_target": USER_ID
-	"transaction_id": WAVE_ID
-	"poll": ...
 }
 
 ----------------------------------

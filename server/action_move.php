@@ -64,7 +64,7 @@
 		
 		$poll = get_poll_data($request);
 		
-		if ($poll['old']) return array('err' => 'OLD');
+		if ($poll['old']) return array('err' => 'GAME_RESET');
 		
 		return array(
 			'err' => 'OK',

@@ -12,11 +12,13 @@ class PlayScene : AbstractScene {
 	field cameraY = null;
 	field playersById = {};
 	field userIds = [];
+	field wavesById = {};
+	field waveIds = [];
 	
 	field buttons;
 	field buttonKeys;
 	field lastSyncTime = 0;
-	field syncRequest = null;
+	field pollRequests = [];
 	
 	constructor(gameId, userId, authToken) : base() {
 		this.gameId = gameId;
@@ -85,6 +87,41 @@ class PlayScene : AbstractScene {
 						this.userIds.sort();
 					}
 					break;
+				
+				case 'PART':
+					userId = Core.parseInt(event['data']);
+					if (this.playersById.get(userId) != null) {
+						this.playersById.remove(userId);
+						this.userIds = this.playersById.keys();
+						this.userIds.sort();
+					}
+					break;
+				
+				case 'WAVE_INIT':
+					waveData = event['data'].split(':');
+					userId = Core.parseInt(waveData[0]);
+					waveId = Core.parseInt(waveData[1]);
+					ox = Core.parseInt(waveData[2]);
+					oy = Core.parseInt(waveData[3]);
+					ax = Core.parseInt(waveData[4]);
+					ay = Core.parseInt(waveData[5]);
+					bx = Core.parseInt(waveData[6]);
+					by = Core.parseInt(waveData[7]);
+					wave = new Wave(waveId, userId, ox, oy, ax, ay, bx, by);
+					this.wavesById[waveId] = wave;
+					this.waveIds.add(waveId);
+					this.waveIds.sort();
+					break;
+				
+				case 'WAVE_RECV':
+				case 'WAVE_GIVE_UP':
+					waveId = Core.parseInt(event['data'].split(':')[0]);
+					if (this.wavesById.get(waveId) != null) {
+						this.wavesById.remove(waveId);
+						this.waveIds = this.wavesById.keys();
+						this.waveIds.sort();
+					}
+					break;
 					
 				default:
 					throw new Core.Exception("Unknown server event type: " + event['type'] + ' --> ' + event['data']);
@@ -142,32 +179,48 @@ class PlayScene : AbstractScene {
 			player.update();
 		}
 		
-		if (this.lastSyncTime < Core.currentTime() - 1 && this.syncRequest == null) {
-			this.syncRequest = new NetworkMessage({
+		if (this.lastSyncTime < Core.currentTime() - 1 && this.pollRequests.length == 0) {
+			this.pollRequests.add(new NetworkMessage({
 				'action': 'POLL',
 				'user_id': this.playerId,
 				'token': this.authToken,
 				'game_id': this.gameId,
 				'event_id': this.lastEventId,
-			}).send();
+			}).send());
 		}
 		
-		if (this.syncRequest != null && this.syncRequest.isDone()) {
-			if (this.syncRequest.isError()) {
-				// ignore?
-			} else {
-				syncResult = this.syncRequest.getResponse();
-				switch (syncResult['err']) {
-					case 'OK':
-						this.applyPollData(syncResult['poll']);
-						this.lastSyncTime = Core.currentTime();
-						break;
-					case 'GAME_RESET':
-						this.switchScene(new LoginScene("The game has restarted."));
-						return;
+		if (this.pollRequests.length > 0) {
+			newPollRequests = [];
+			for (pollRequest : this.pollRequests) {
+				if (pollRequest.isDone()) {
+					if (pollRequest.isError()) {
+						// ignore?
+					} else {
+						syncResult = pollRequest.getResponse();
+						switch (syncResult['err']) {
+							case 'OK':
+								this.applyPollData(syncResult['poll']);
+								this.lastSyncTime = Core.currentTime();
+								break;
+							case 'INVALID':
+								this.switchScene(new LoginScene("Invalid request sent"));
+								return;
+							case 'OLD':
+								// ignore, I guess?
+								return;
+							case 'GAME_RESET':
+								this.switchScene(new LoginScene("The game has restarted."));
+								return;
+							default:
+								this.switchScene(new LoginScene("Unknown response: '" + syncResult['err'] + "'"));
+								return;
+						}
+					}
+				} else {
+					newPollRequests.add(pollRequest);
 				}
 			}
-			this.syncRequest = null;
+			this.pollRequests = newPollRequests;
 		}
 	}
 	
@@ -181,21 +234,84 @@ class PlayScene : AbstractScene {
 				break;
 			case 'left':
 				player.dx = -10;
+				player.lastDirection = 'left';
+				if (player.activeWaveId != null) this.doWave();
 				break;
 			case 'right':
 				player.dx = 10;
+				player.lastDirection = 'right';
+				if (player.activeWaveId != null) this.doWave();
 				break;
 			case 'up':
 				player.dy = -10;
+				player.lastDirection = 'up';
+				if (player.activeWaveId != null) this.doWave();
 				break;
 			case 'down':
 				player.dy = 10;
+				player.lastDirection = 'down';
+				if (player.activeWaveId != null) this.doWave();
 				break;
 		}
 	}
 	
+	function getWaveCoords(player) {
+		points = [Math.floor(player.x), Math.floor(player.y) - 15] * 3;
+		distMajor = 250;
+		distMinor = 80;
+		switch (player.lastDirection) {
+			case 'up':
+				points[2] -= distMinor;
+				points[3] -= distMajor;
+				points[4] += distMinor;
+				points[5] -= distMajor;
+				break;
+			case 'down':
+				points[2] -= distMinor;
+				points[3] += distMajor;
+				points[4] += distMinor;
+				points[5] += distMajor;
+				break;
+			case 'left':
+				points[2] -= distMajor;
+				points[3] -= distMinor;
+				points[4] -= distMajor;
+				points[5] += distMinor;
+				break;
+			case 'right':
+				points[2] += distMajor;
+				points[3] -= distMinor;
+				points[4] += distMajor;
+				points[5] += distMinor;
+				break;
+			default:
+				return null;
+		}
+		return points;
+	}
+	
 	function doWave() {
-		print("Do wave.");
+		player = this.playersById[this.playerId];
+		if (player.activeWaveId == null) {
+			coordinates = this.getWaveCoords(player);
+			this.pollRequests.add(new NetworkMessage({
+				'user_id': this.playerId,
+				'token': this.authToken,
+				'game_id': this.gameId,
+				'event_id': this.lastEventId,
+				'action': 'WAVE_INIT',
+				'target': coordinates.join(','),
+			}).send());
+		} else {
+			this.pollRequests.add(new NetworkMessage({
+				'user_id': this.playerId,
+				'token': this.authToken,
+				'game_id': this.gameId,
+				'event_id': this.lastEventId,
+				'action': 'WAVE_GIVE_UP',
+				'wave_id': player.activeWaveId,
+			}).send());
+		}
 	}
 	
 	function render(rc) {
@@ -215,6 +331,11 @@ class PlayScene : AbstractScene {
 		cameraOffsetY = Math.floor(-this.cameraY + SCREEN_HEIGHT / 2 + .5);
 		
 		this.renderBackground(cameraOffsetX, cameraOffsetY);
+		
+		for (waveId : this.waveIds) {
+			wave = this.wavesById[waveId];
+			wave.render(cameraOffsetX, cameraOffsetY, rc);
+		}
 		
 		for (userId : this.userIds) {
 			player = this.playersById[userId];

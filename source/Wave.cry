@@ -1,0 +1,49 @@
+import Graphics2D;
+import Math;
+
+class Wave {
+	
+	field userId;
+	field waveId;
+	
+	field originX;
+	field originY;
+	field ax;
+	field ay;
+	field bx;
+	field by;
+	
+	field avgX;
+	field avgY;
+	
+	constructor(waveId, userId, originX, originY, ax, ay, bx, by) {
+		this.waveId = waveId;
+		this.userId = userId;
+		this.originX = originX;
+		this.originY = originY;
+		this.ax = ax;
+		this.ay = ay;
+		this.bx = bx;
+		this.by = by;
+		
+		this.avgX = (this.originX + this.ax + this.bx) / 3;
+		this.avgY = (this.originY + this.ay + this.by) / 3;
+	}
+	
+	function render(cameraOffsetX, cameraOffsetY, rc) {
+		
+		px = this.avgX + cameraOffsetX;
+		py = this.avgY + cameraOffsetY;
+		if (px < -200 || px > SCREEN_WIDTH + 200 || py < -200 || py > SCREEN_HEIGHT + 200) {
+			return;
+		}
+		
+		color = 150 + Math.floor(50 * Math.sin(4 * 2 * 3.14159 / 60.0 * rc));
+		
+		Draw.triangle(
+			this.originX + cameraOffsetX, this.originY + cameraOffsetY,
+			this.ax + cameraOffsetX, this.ay + cameraOffsetY,
+			this.bx + cameraOffsetX, this.by + cameraOffsetY,
+			120, 120, 120, color);
+	}
+}

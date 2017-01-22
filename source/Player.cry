@@ -17,6 +17,7 @@ class Player {
 	field x;
 	field y;
 	field pointQueue = [];
+	field lastDirection = 'down';
 	
 	field isYou = false;
 	field name;
@@ -25,7 +26,10 @@ class Player {
 	field coordsLastSentAt = 0;
 	field movedThisFrame = false;
 	
+	field activeWaveId = null;
+	
 	field coordSendRequest = null;
+	field waveRequest = null;
 	
 	field images;
 	
@@ -157,6 +161,35 @@ class Player {
 			}
 			this.coordSendRequest = null;
 		}
+		
+		if (this.waveRequest != null && this.waveRequest.isDone()) {
+			if (this.waveRequest.isError()) {
+				// ignore?
+			} else {
+				response = this.waveRequest.getResponse();
+				// actually, now, I'm just going to ignore the output and let the applyPollData deal with it.
+				// Not enough time to do this "right".
+				
+				this.waveRequest = null;
+				switch (response['err']) {
+					case 'OK':
+						this.playScene.applyPollData(response.get('poll'));
+						break;
+					case 'GAME_RESET':
+						this.playScene.switchScene(new LoginScene("The game was reset"));
+						return;
+					case 'INVALID':
+						this.playScene.switchScene(new LoginScene("Invalid request sent"));
+						return;
+					case 'OLD':
+						// ignore, I guess?
+						return;
+					default:
+						this.playScene.switchScene(new LoginScene("Server sent unknown response: '" + response['err'] + "'"));
+						return;
+				}
+			}
+		}
 	}
 	
 	function sendCoordsToNetwork() {
@@ -181,10 +214,14 @@ class Player {
 		px = Math.floor(this.x) + cameraOffsetX;
 		py = Math.floor(this.y) + cameraOffsetY;
 		if (px > -50 && px < SCREEN_WIDTH + 50 && py > -50 && py < SCREEN_HEIGHT + 50) {
-			if (this.movedThisFrame && (rc / 18) % 2 == 0) {
-				img = this.images[PlayerImageType.WALK2];
+			if (this.activeWaveId != null) {
+				img = this.images[(rc / 10) % 2 == 0 ? PlayerImageType.WAVE1 : PlayerImageType.WAVE2];
 			} else {
-				img = this.images[PlayerImageType.WALK1];
+				if (this.movedThisFrame && (rc / 18) % 2 == 0) {
+					img = this.images[PlayerImageType.WALK2];
+				} else {
+					img = this.images[PlayerImageType.WALK1];
+				}
 			}
 			img.draw(px - img.width / 2, py - img.height);
 			nl = this.nameLabel;

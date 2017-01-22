@@ -43,4 +43,28 @@
 		return intval($value * 1000) / 1000.0;
 	}
 	
+	function is_point_in_triangle($px, $py, $ax, $ay, $bx, $by, $cx, $cy) {
+		
+		// these handle 99% of cases
+		if ($px < $ax && $px < $bx && $px < $cx) return false;
+		if ($px > $ax && $px > $bx && $px > $cx) return false;
+		if ($py < $ay && $py < $by && $py < $cy) return false;
+		if ($py > $ay && $py > $by && $py > $cy) return false;
+		
+		$a = cross_product($ax, $ay, $bx, $by, $px, $py);
+		$b = cross_product($bx, $by, $cx, $cy, $px, $py);
+		$c = cross_product($cx, $cy, $ax, $ay, $px, $py);
+		
+		if ($a < 0 && $b < 0 && $c < 0) return true;
+		if ($a > 0 && $b > 0 && $c > 0) return true;
+		return false;
+	}
+	
+	function cross_product($ox, $oy, $ax, $ay, $bx, $by) {
+		$vax = $ax - $ox;
+		$vay = $ay - $oy;
+		$vbx = $bx - $ox;
+		$vby = $by - $oy;
+		return $vax * $vby - $vbx * $vay;
+	}
 ?>

@@ -21,7 +21,7 @@ class NetworkMessage {
 	function send() {
 		// TODO: implement re-send/retry
 		this.httpRequest.sendAsync();
-		//print("SENT: " + this.jsonRequest);
+		print("SENT: " + this.jsonRequest);
 		return this;
 	}
 	
@@ -32,7 +32,7 @@ class NetworkMessage {
 			response = this.httpRequest.getResponse();
 			if (response.getStatusCode() == 200) {
 				this.jsonResponse = response.getContent();
-				//print("RECV: " + this.jsonResponse);
+				print("RECV: " + this.jsonResponse);
 			} else {
 				this._isError = true;
 			}

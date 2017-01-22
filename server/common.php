@@ -193,6 +193,28 @@
 					$user_id = intval($event['data']);
 					unset($user_info_by_id[$user_id]);
 					break;
+				
+				case 'WAVE_INIT':
+					$wave_data = explode(':', $event['data']);
+					$user_id = intval($wave_data[0]);
+					$wave_id = intval($wave_data[1]);
+					$ax = intval($wave_data[2]);
+					$ay = intval($wave_data[3]);
+					$bx = intval($wave_data[4]);
+					$by = intval($wave_data[5]);
+					$cx = intval($wave_data[6]);
+					$cy = intval($wave_data[7]);
+					$wave_info_by_id[$wave_id] = array($user_id, $wave_id, $ax, $ay, $bx, $by, $cx, $cy);
+					break;
+				
+				case 'WAVE_GIVE_UP':
+				case 'WAVE_RECV':
+					$wave_data = explode(':', $event['data']);
+					$wave_id = intval($wave_data[0]);
+					if (isset($wave_info_by_id[$wave_id])) {
+						unset($wave_info_by_id[$wave_id]);
+					}
+					break;
 			}
 		}
 		
@@ -289,5 +311,17 @@
 			$user['token'] !== $token ||
 			intval($user['game_id']) !== $game_id) return null;
 		return $user;
+	}
+	
+	function refresh_connection_between_users($user_a, $user_b, $game_id) {
+		$now = time();
+		db()->delete('network', "`last_wave_time` < " . ($now - 120)); // delete old connections
+		
+		$key = min($user_a, $user_b) . '_' . max($user_a, $user_b);
+		$values = array('last_wave_time' => $now, 'game_id' => $game_id);
+		$affected = db()->update('network', $values, "`user_ids` = '" . $key . "'", 1);
+		if ($affected == 0) {
+			db()->try_insert('network', $values);
+		}
 	}
 ?>
