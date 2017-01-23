@@ -20,6 +20,11 @@ class PlayScene : AbstractScene {
 	field lastSyncTime = 0;
 	field pollRequests = [];
 	
+	field leaderboard = [];
+	field leaderboardText = [];
+	field yourScore = 0.0;
+	field yourScoreText;
+	
 	constructor(gameId, userId, authToken) : base() {
 		this.gameId = gameId;
 		this.playerId = userId;
@@ -40,6 +45,16 @@ class PlayScene : AbstractScene {
 		for (button : this.buttons.values()) {
 			this.addElement(button);
 		}
+		
+		this.addElement(UIText.create(10, 10, "LEADERBOARD", 'blue', FontSize.M));
+		for (i = 0; i < 5; ++i) {
+			t = UIText.create(30, 60 + i * 30, '', 'blue', FontSize.M);
+			this.addElement(t);
+			this.leaderboardText.add(t);
+		}
+		
+		this.yourScoreText = UIText.create(10, SCREEN_HEIGHT - 70, '', 'black', FontSize.L);
+		this.addElement(this.yourScoreText);
 	}
 	
 	function applyPollData(pollData) {
@@ -144,6 +159,36 @@ class PlayScene : AbstractScene {
 					throw new Core.Exception("Unknown server event type: " + event['type'] + ' --> ' + event['data']);
 			}
 		}
+		
+		scores = pollData.get('scores');
+		if (scores != null) {
+			nums = scores.trim().split(':');
+			pairs = [];
+			for (i = 0; i < nums.length; i += 2) {
+				userId = Core.parseInt(nums[i]);
+				score = Core.parseInt(nums[i + 1]);
+				user = this.playersById.get(userId);
+				if (user != null) {
+					pairs.add([userId, score,  user]);
+					user.score = score;
+				}
+			}
+			pairs.sort(this.pairSorter);
+			this.leaderboard.clear();
+			for (i = 0; i < 5; ++i)  {
+				if (i < pairs.length) {
+					pair = pairs[i];
+					user = pair[2];
+					this.leaderboardText[i].text = user.name + ": " + pair[1];
+				} else {
+					this.leaderboardText[i].text = '';
+				}
+			}
+		}
+	}
+	
+	function pairSorter(pair) {
+		return -pair[1];
 	}
 	
 	function applyAbsolutePollData(pollData) {
@@ -201,6 +246,8 @@ class PlayScene : AbstractScene {
 	
 	function update(input) {
 		you = this.playersById[this.playerId];
+		
+		this.yourScoreText.text = "Score: " + you.score;
 		
 		if (input.pressed) {
 			mx = input.mouseX;

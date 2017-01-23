@@ -18,6 +18,7 @@ class Player {
 	field y;
 	field pointQueue = [];
 	field lastDirection = 'down';
+	field score = 0.0;
 	
 	field isYou = false;
 	field name;
