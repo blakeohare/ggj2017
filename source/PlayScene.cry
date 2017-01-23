@@ -57,7 +57,7 @@ class PlayScene : AbstractScene {
 		minId = pollData.get('event_id_min');
 		maxId = pollData.get('event_id_max');
 		events = pollData.get('events');
-		if (minId == null || maxId == null || events == null) return;
+		if (minId == null || maxId == null || events == null || minId == 0) return;
 		
 		for (eventId = minId; eventId <= maxId; ++eventId) {
 			event = events['e' + eventId];

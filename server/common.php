@@ -60,9 +60,9 @@
 		}
 		
 		// no new events (this event is the old one you knew about)
-		if (count($events) == 1) {
-			return array();
-		}
+		//if (count($events) == 1) {
+		//	return array();
+		//}
 		
 		// otherwise you can get the list of all events that have transpired since the last event
 		
@@ -94,7 +94,7 @@
 		while ($users_db->has_more()) {
 			$user = $users_db->next();
 			array_push($output, $user['user_id']);
-			array_push($output, intval($user['score'] * 10));
+			array_push($output, intval($user['score'] * 100));
 		}
 		return implode(":", $output);
 	}
@@ -323,10 +323,18 @@
 		db()->delete('network', "`last_wave_time` < " . ($now - 120)); // delete old connections
 		
 		$key = min($user_a, $user_b) . '_' . max($user_a, $user_b);
-		$values = array('user_ids' => $key, 'last_wave_time' => $now, 'game_id' => $game_id, 'user_a' => $user_a, 'user_b' => $user_b);
+		$values = array(
+			'user_ids' => $key,
+			'last_wave_time' => $now,
+			'game_id' => $game_id,
+			'user_a' => $user_a,
+			'user_b' => $user_b);
+		//print_r($values);
+		
 		$affected = db()->update('network', $values, "`user_ids` = '" . $key . "'", 1);
 		if ($affected == 0) {
 			db()->try_insert('network', $values);
+			//echo "\nINSERTED\n";
 		}
 	}
 	
@@ -341,7 +349,30 @@
 			db()->insert('events', array('game_id' => $user['game_id'], 'time' => time(), 'type' => 'PART', 'data' => $user_id));
 		}
 		
-		db()->delete("network", "`game_id` < $game_id");
+		$pairs = db()->select("SELECT * FROM `network`");
+		$scores = array();
+		$now = time();
+		while ($pairs->has_more()) {
+			$pair = $pairs->next();
+			$key = $pair['user_ids'];
+			$user_ids = explode('_', $key);
+			$user_a = intval($user_ids[0]);
+			$user_b = intval($user_ids[1]);
+			if (!isset($scores[$user_a])) $scores[$user_a] = 0.0;
+			if (!isset($scores[$user_b])) $scores[$user_b] = 0.0;
+			$ago = $now - intval($pair['last_wave_time']);
+			if ($ago > 120) {
+				db()->delete('network', "`user_ids` = '" . $key . "'", 1);
+			} else {
+				$points = 10 * (1.0 - $ago / 120);
+				$scores[$user_a] += $points;
+				$scores[$user_b] += $points;
+			}
+		}
+		
+		foreach ($scores as $user_id => $score) {
+			db()->update('users', array('score' => $score), "`user_id` = $user_id", 1);
+		}
 		
 		$waves = db()->select("
 			SELECT
