@@ -61,7 +61,7 @@ class PlayScene : AbstractScene {
 		
 		for (eventId = minId; eventId <= maxId; ++eventId) {
 			event = events['e' + eventId];
-			switch (event['type']) {
+			switch (event['type'].trim()) {
 				case 'MOVE':
 					data = event['data'].split(':');
 					userId = Core.parseInt(data[0]);
@@ -111,19 +111,36 @@ class PlayScene : AbstractScene {
 					this.wavesById[waveId] = wave;
 					this.waveIds.add(waveId);
 					this.waveIds.sort();
+					player = this.playersById.get(userId);
+					if (player != null) {
+						player.activeWaveId = waveId;
+					}
 					break;
 				
 				case 'WAVE_RECV':
 				case 'WAVE_GIVE_UP':
 					waveId = Core.parseInt(event['data'].split(':')[0]);
 					if (this.wavesById.get(waveId) != null) {
-						this.wavesById.remove(waveId);
+						wave = this.wavesById.get(waveId);
+						if (wave != null) {
+							this.wavesById.remove(waveId);
+						}
+						player = this.playersById.get(wave.userId);
+						if (player != null && player.activeWaveId == waveId) player.activeWaveId = null;
 						this.waveIds = this.wavesById.keys();
 						this.waveIds.sort();
 					}
 					break;
 					
 				default:
+					if (event['type'] == 'PART') { // WTF? why is the switch statement failing?
+						userId = Core.parseInt(event['data']);
+						if (this.playersById.get(userId) != null) {
+							this.playersById.remove(userId);
+							this.userIds = this.playersById.keys();
+							this.userIds.sort();
+						}
+					}
 					throw new Core.Exception("Unknown server event type: " + event['type'] + ' --> ' + event['data']);
 			}
 		}
@@ -132,6 +149,8 @@ class PlayScene : AbstractScene {
 	function applyAbsolutePollData(pollData) {
 		state = pollData.get('state');
 		if (state == null) return;
+		
+		// update users
 		userUpdatesRaw = state['user_data'].trim();
 		newPlayersById = {};
 		if (userUpdatesRaw.length > 0) {
@@ -153,6 +172,31 @@ class PlayScene : AbstractScene {
 		this.playersById = newPlayersById;
 		this.userIds = this.playersById.keys();
 		this.userIds.sort();
+		
+		// udpate waves
+		waveUpdatesRaw = state['wave_data'].trim();
+		newWavesById = {};
+		if (waveUpdatesRaw.length > 0) {
+			for (update : waveUpdatesRaw.split('|')) {
+				parts = update.split(':');
+				userId = Core.parseInt(parts[0]);
+				waveId = Core.parseInt(parts[1]);
+				ax = Core.parseInt(parts[2]);
+				ay = Core.parseInt(parts[3]);
+				bx = Core.parseInt(parts[4]);
+				by = Core.parseInt(parts[5]);
+				cx = Core.parseInt(parts[6]);
+				cy = Core.parseInt(parts[7]);
+				player = this.playersById.get(userId);
+				if (player != null) {
+					player.activeWaveId = waveId;
+				}
+				newWavesById[waveId] = new Wave(waveId, userId, ax, ay, bx, by, cx, cy);
+			}
+		}
+		this.wavesById = newWavesById;
+		this.waveIds = this.wavesById.keys();
+		this.waveIds.sort();
 	}
 	
 	function update(input) {
@@ -168,6 +212,11 @@ class PlayScene : AbstractScene {
 				}
 			}
 		}
+		
+		if (input.spaceTapped) {
+			this.doWave();
+		}
+		
 		pushedKeys = input.pushedKeys;
 		if (pushedKeys.get('left', false)) this.buttonPushed('left', false);
 		else if (pushedKeys.get('right', false)) this.buttonPushed('right', false);
@@ -311,6 +360,10 @@ class PlayScene : AbstractScene {
 				'action': 'WAVE_GIVE_UP',
 				'wave_id': player.activeWaveId,
 			}).send());
+			if (this.wavesById.get(player.activeWaveId) != null) {
+				this.wavesById.remove(player.activeWaveId);
+			}
+			player.activeWaveId = null;
 		}
 	}
 	
@@ -332,9 +385,17 @@ class PlayScene : AbstractScene {
 		
 		this.renderBackground(cameraOffsetX, cameraOffsetY);
 		
+		badData = false;
 		for (waveId : this.waveIds) {
-			wave = this.wavesById[waveId];
-			wave.render(cameraOffsetX, cameraOffsetY, rc);
+			wave = this.wavesById.get(waveId);
+			if (wave == null) badData = true;
+			else {
+				wave.render(cameraOffsetX, cameraOffsetY, rc);
+			}
+		}
+		if (badData) {
+			this.waveIds = this.wavesById.keys();
+			this.waveIds.sort();
 		}
 		
 		for (userId : this.userIds) {

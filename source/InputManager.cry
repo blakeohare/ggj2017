@@ -4,6 +4,7 @@ class InputState {
 	field mouseY = 0;
 	field pressed = false;
 	field clicked = false;
+	field spaceTapped = false;
 	
 	field pushedKeys = {};
 	

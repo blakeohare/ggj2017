@@ -70,6 +70,7 @@
 				'msg_received' => 0,
 				'game_id' => $game_id,
 				'join_token' => $join_token,
+				'last_sync' => time(),
 			));
 		
 		db()->insert('events', array('time' => time(), 'game_id' => $game_id, 'type' => 'JOIN', 'data' => $user_id . ':' . $name . ':' . $x . ':' . $y));

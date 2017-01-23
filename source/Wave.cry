@@ -38,12 +38,12 @@ class Wave {
 			return;
 		}
 		
-		color = 150 + Math.floor(50 * Math.sin(4 * 2 * 3.14159 / 60.0 * rc));
+		color = 80 + Math.floor(50 * Math.sin(4 * 2 * 3.14159 / 60.0 * rc));
 		
 		Draw.triangle(
 			this.originX + cameraOffsetX, this.originY + cameraOffsetY,
 			this.ax + cameraOffsetX, this.ay + cameraOffsetY,
 			this.bx + cameraOffsetX, this.by + cameraOffsetY,
-			120, 120, 120, color);
+			120, 160, 200, color);
 	}
 }

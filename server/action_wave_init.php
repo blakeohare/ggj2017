@@ -80,9 +80,9 @@
 						'type' => 'WAVE_RECV',
 						'time' => time(),
 						'game_id' => $game_id,
-						'data' => implode(':', $wave['wave_id'], $user_id, $wave['from_user_id'])));
+						'data' => implode(':', array($wave['wave_id'], $user_id, $wave['from_user_id']))));
 				
-				refresh_connection_between_users($wave['from_user_id'], $user_id);
+				refresh_connection_between_users($wave['from_user_id'], $user_id, $game_id);
 				
 				$poll = get_poll_data($request);
 				if ($poll['old']) return array('err' => 'GAME_RESET');
@@ -100,6 +100,7 @@
 		$wave_id = db()->insert(
 			'waves',
 			array(
+				'game_id' => $game_id,
 				'from_user_id' => $user_id,
 				'location' => implode(',', array($origin_x, $origin_y, $a_x, $a_y, $b_x, $b_y)),
 			));
@@ -118,7 +119,7 @@
 		
 		return array(
 			'err' => 'OK',
-			'wave_id' => $wave_id,
+			'wave_create_id' => $wave_id,
 			'poll' => $poll);
 	}
 ?>

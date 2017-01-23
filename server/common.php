@@ -29,6 +29,11 @@
 			$game_id = get_current_game_id();
 		}
 		
+		$owner_id = intval($request->json['user_id']);
+		db()->update('users', array('last_sync' => time()), "`user_id` = $owner_id", 1);
+		
+		cull_old_data($game_id);
+		
 		$events_db = db()->select("
 			SELECT
 				`event_id`,
@@ -163,7 +168,7 @@
 				for ($i = 0; $i < 8; ++$i) {
 					$parts[$i] = intval($parts[$i]);
 				}
-				$wave_info_by_id[$parts[0]] = $parts;
+				$wave_info_by_id[$parts[1]] = $parts;
 			}
 		}
 		
@@ -212,7 +217,7 @@
 					$wave_data = explode(':', $event['data']);
 					$wave_id = intval($wave_data[0]);
 					if (isset($wave_info_by_id[$wave_id])) {
-						unset($wave_info_by_id[$wave_id]);
+						$wave_info_by_id[$wave_id] = null;
 					}
 					break;
 			}
@@ -318,10 +323,45 @@
 		db()->delete('network', "`last_wave_time` < " . ($now - 120)); // delete old connections
 		
 		$key = min($user_a, $user_b) . '_' . max($user_a, $user_b);
-		$values = array('last_wave_time' => $now, 'game_id' => $game_id);
+		$values = array('user_ids' => $key, 'last_wave_time' => $now, 'game_id' => $game_id, 'user_a' => $user_a, 'user_b' => $user_b);
 		$affected = db()->update('network', $values, "`user_ids` = '" . $key . "'", 1);
 		if ($affected == 0) {
 			db()->try_insert('network', $values);
+		}
+	}
+	
+	function cull_old_data($game_id) {
+		$game_id = intval($game_id);
+		$cutoff = time() - 120;
+		$old_users = db()->select("SELECT * FROM `users` WHERE `game_id` = $game_id AND `last_sync` < $cutoff");
+		while ($old_users->has_more()) {
+			$user = $old_users->next();
+			$user_id = intval($user['user_id']);
+			db()->delete('users', "`user_id` = $user_id", 1);
+			db()->insert('events', array('game_id' => $user['game_id'], 'time' => time(), 'type' => 'PART', 'data' => $user_id));
+		}
+		
+		db()->delete("network", "`game_id` < $game_id");
+		
+		$waves = db()->select("
+			SELECT
+				w.`wave_id`,
+				w.`game_id`,
+				u.`user_id`
+			FROM `waves` w
+			LEFT JOIN `users` u ON (u.`user_id` = w.`from_user_id`)
+			WHERE w.`game_id` = $game_id");
+		while ($waves->has_more()) {
+			$wave = $waves->next();
+			$wave_id = intval($wave['wave_id']);
+			$user_id = intval($wave['user_id']);
+			
+			if (intval($wave['game_id']) < $game_id) {
+				db()->delete('waves', "`wave_id` = " . $wave_id, 1);
+			} else if ($user_id == 0) {
+				db()->delete('waves', "`wave_id` = " . $wave_id, 1);
+				db()->insert('events', array('type' => 'WAVE_GIVE_UP', 'data' => $wave_id, 'time' => time(), 'game_id' => $game_id));
+			}
 		}
 	}
 ?>

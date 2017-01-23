@@ -11,6 +11,7 @@ function main() {
 	rc = 0;
 	
 	while (true) {
+		input.spaceTapped = false;
 		input.clicked = false;
 		for (event : window.pumpEvents()) {
 			switch (event.type) {
@@ -54,6 +55,11 @@ function main() {
 						case KeyboardKey.RIGHT:
 						case KeyboardKey.D:
 							key = 'right';
+							break;
+						case KeyboardKey.SPACE:
+							if (event.type == EventType.KEY_DOWN) {
+								input.spaceTapped = true;
+							}
 							break;
 					}
 					if (key != null) {
