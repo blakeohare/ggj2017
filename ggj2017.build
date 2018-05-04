@@ -11,23 +11,23 @@
 	<guidseed>com.blakeohare.ggj2017,v1,%TARGET_NAME%</guidseed>
 	
 	<target name="android">
-		<platform>game-csharp-android</platform>
+		<platform>javascript-android-app</platform>
 	</target>
 	
 	<target name="js_local">
-		<platform>game-javascript</platform>
+		<platform>javascript-app</platform>
 	</target>
 	
 	<target name="js_remote">
-		<platform>game-javascript</platform>
+		<platform>javascript-app</platform>
 		<jsfileprefix>/game/</jsfileprefix>
 	</target>
 	
 	<target name="csharp">
-		<platform>game-csharp-opentk</platform>
+		<platform>csharp-app</platform>
 	</target>
 	
 	<target name="python">
-		<platform>game-python-pygame</platform>
+		<platform>python-app</platform>
 	</target>
 </build>
