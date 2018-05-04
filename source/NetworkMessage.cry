@@ -1,7 +1,8 @@
 import Json;
 import Http;
 
-const URL_PREFIX = 'http://wavingsimulator2017.wtf';
+//const URL_PREFIX = 'http://wavingsimulator2017.wtf';
+const URL_PREFIX = 'http://ggj2017.nfshost.com';
 
 class NetworkMessage {
 	field jsonRequest;
